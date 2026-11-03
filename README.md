@@ -15,8 +15,12 @@ SculptureABC 以 [SculptForge](https://github.com/islandmed/SculptForge)（GPL-3
 整個專案以 **GPL-3.0-or-later** 授權（見 [LICENSE](LICENSE)）；隨附的字型、圖示與範例模型照
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 標示來源。
 
+SculptForge 的貢獻指南、路線圖、版本紀錄等請看 [SculptForge 的 GitHub](https://github.com/islandmed/SculptForge)
+（這裡沒有附，README.SculptForge.md 裡指向它們的連結請到那邊看）。
+
 SculptureABC is built on SculptForge and is licensed under GPL-3.0-or-later. Upstream's own read-me is
-[README.SculptForge.md](README.SculptForge.md).
+[README.SculptForge.md](README.SculptForge.md); its contributing guide, roadmap and change log are on
+[SculptForge's GitHub](https://github.com/islandmed/SculptForge).
 
 ## 編譯 · Building
 

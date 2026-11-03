@@ -9,8 +9,11 @@ $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path "$PSScriptRoot\..\..").Path
 Push-Location $root
 try {
-    # Not published: notes and plans, and upstream's GitHub automation (it would start running on our repo).
-    $private = @('PLAN.md', 'CHECKLIST.md', 'CLAUDE.md', 'mobile/UPSTREAM.md', '.github')
+    # Not published: notes and plans, upstream's GitHub automation (it would start running on our repo), and
+    # upstream's project pages (contributing, conduct, security contacts, citation, roadmap, change log), which
+    # GitHub would show as this repository's own.
+    $private = @('PLAN.md', 'CHECKLIST.md', 'CLAUDE.md', 'mobile/UPSTREAM.md', '.github',
+                 'CONTRIBUTING.md', 'CODE_OF_CONDUCT.md', 'SECURITY.md', 'CITATION.cff', 'ROADMAP.md', 'CHANGELOG.md')
 
     if (git status --porcelain --untracked-files=no) {
         Write-Warning 'There are uncommitted changes: the snapshot is what main has committed, not the working tree.'
