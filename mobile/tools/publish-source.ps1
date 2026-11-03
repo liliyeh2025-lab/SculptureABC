@@ -23,6 +23,14 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'read-tree failed' }
         git rm --cached -r -q --ignore-unmatch -- $private
         if ($LASTEXITCODE -ne 0) { throw 'rm failed' }
+        # The front page: our read-me (mobile/README.public.md) as README.md, upstream's kept as README.SculptForge.md.
+        $ours = git rev-parse main:mobile/README.public.md
+        $upstream = git rev-parse main:README.md
+        if ($LASTEXITCODE -ne 0) { throw 'README not found' }
+        git rm --cached -q -- mobile/README.public.md README.md
+        git update-index --add --cacheinfo "100644,$ours,README.md"
+        git update-index --add --cacheinfo "100644,$upstream,README.SculptForge.md"
+        if ($LASTEXITCODE -ne 0) { throw 'README swap failed' }
         $tree = git write-tree
         if ($LASTEXITCODE -ne 0) { throw 'write-tree failed' }
     } finally {
