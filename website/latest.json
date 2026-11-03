@@ -1,0 +1,11 @@
+{
+  "version": "0.10.9",
+  "download": "https://github.com/islandmed/SculptForge/releases/latest",
+  "notes": "https://sculptforge.app/guide/whats-new.html",
+  "highlights": [
+    "Each brush keeps its own settings; starter meshes and a first-sculpt lesson",
+    "Calmer, neutral looks: Outlines Off/Subtle/On, quiet hover, dismissable notices",
+    "Windows tablets: pen fixes, hotplug, Wintab pressure, better UI scaling",
+    "Image to 3D with no setup (Hunyuan3D 2.1), AI off switch, stroke popup and Cut tool"
+  ]
+}

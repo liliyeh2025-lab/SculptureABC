@@ -1,0 +1,116 @@
+# Vector displacement brushes (Brush > Vector Displacement): pick a built-in VDM, stamp it with DragRect (the drag
+# sets size and turn) and DragDot, Alt digs in, undo; the stroke comes back with the next brush; then sculpt a VDM
+# plane, Create VDM (saved to the library) and stamp the new brush on the sphere.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+expect_value vdm_files == 0
+expect_value vdms == 10
+run new_sphere subdivisions=6
+click "Brush##palette.brush"
+click "Brush/##totray"
+wait 0.3
+click "Vector Displacement##brush.vdm"
+expect "Horn##vdm0"
+expect "Ear Curl##vdm1"
+expect "Scales##vdm2"
+expect "Nostril##vdm3"
+expect "Load VDM...##vdm.load"
+expect "New VDM Plane##vdm.new_plane"
+wait_idle 30
+shot palette
+
+# Ctrl-hover help on the new controls.
+hold ctrl
+hover "Swap Y/Z##vdm"
+expect_help G instead of B
+hover "Create VDM##vdm.create"
+expect_help VDM plane
+hold none
+
+# Picking a map makes the VDM brush the brush, with DragRect.
+expect_value stroke_type == 0
+click "Horn##vdm0"
+expect_value brush_type == 14
+expect_value stroke_type == 1
+expect_status VDM: Horn
+snapshot
+stroke 0.72 0.5 0.8 0.36
+expect_value moved > 300
+expect_value moved_out > 0
+expect_value can_undo == 1
+wait_idle 30
+shot horn
+key ctrl+z
+expect_value moved == 0
+
+# The Nostril digs in; Alt turns the Horn into a hole.
+click "Nostril##vdm3"
+snapshot
+stroke 0.7 0.45 0.78 0.45
+expect_value moved_out < 0
+shot nostril
+key ctrl+z
+click "Horn##vdm0"
+hold alt
+stroke 0.7 0.45 0.78 0.45
+hold none
+expect_value moved_out < 0
+key ctrl+z
+
+# DragDot: the stamp has the Draw Size and lands where the drag ends.
+click "Scales##vdm2"
+expect_status VDM: Scales
+click "Stroke##palette.stroke"
+click "Slide Stamp##stroke"
+key escape
+expect_value stroke_type == 2
+snapshot
+stroke 0.3 0.4 0.62 0.55
+expect_value moved > 300
+remember last_dab_x dotx
+expect_value last_dab_x > 0
+shot dragdot
+key ctrl+z
+
+# Another brush brings the stroke that was picked before the VDM brush back (DragDot was picked by hand: it stays).
+click "Clay##brush.clay"
+expect_value stroke_type == 2
+click "Stroke##palette.stroke"
+click "Dots##stroke"
+key escape
+click "Horn##vdm0"
+expect_value stroke_type == 2                 # each brush keeps its own stroke (#78): the VDM brush its Slide Stamp
+click "Clay##brush.clay"
+expect_value stroke_type == 0
+
+# Create VDM: a VDM plane (the sphere is hidden), sculpt it, capture it into the library.
+type "##vdmname" "Bump Spike"
+click "New VDM Plane##vdm.new_plane"
+expect_value subtools == 2
+expect_value visible_subtools == 1
+expect_value uvs == 1
+expect_value masked > 100
+expect_value camera_aligned == 1
+click "Inflate##brush.inflate"
+stroke 0.4 0.45 0.6 0.55
+stroke 0.45 0.55 0.6 0.45
+wait_idle 30
+shot vdm-plane
+click "Create VDM##vdm.create"
+expect_status Created VDM 'Bump Spike'
+expect_value vdm_files == 1
+expect_value vdms == 11
+expect_value brush_type == 14
+expect "Bump Spike##vdm10"
+wait_idle 30
+shot created
+
+# Stamp it on the sphere.
+run subtool_select index=0
+run subtool_visibility index=0 visible=true
+run subtool_visibility index=1 visible=false
+expect_value active_subtool == 0
+snapshot
+stroke 0.5 0.5 0.62 0.4
+expect_value moved > 100
+wait_idle 30
+shot stamped

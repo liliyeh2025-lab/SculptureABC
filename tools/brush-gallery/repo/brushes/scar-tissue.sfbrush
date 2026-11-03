@@ -1,0 +1,29 @@
+{
+  "name": "Scar Tissue",
+  "description": "Raised, puckered scars and healed wounds.",
+  "direction": "normal",
+  "depth": 0.4,
+  "plane": "none",
+  "planeAmount": 0.5,
+  "pinch": 0.6,
+  "drag": 0,
+  "smooth": 0.15,
+  "hardness": 0.2,
+  "tipSharpness": 0.3,
+  "pattern": "ridges",
+  "patternScale": 0.25,
+  "patternAmount": 0.25,
+  "spacing": 0.05,
+  "jitter": 0,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "skin",
+    "character",
+    "creature"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

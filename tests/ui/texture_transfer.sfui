@@ -1,0 +1,77 @@
+# Keeping a painted texture when the UVs or the surface are rebuilt (core/TextureTransfer.h): Auto UV moves the
+# paint and its layers onto the new UVs, and Voxel Remesh / QRemesh with Keep Texture give the new surface
+# Auto UVs and project the texture onto it, each as one undo step.
+run new_sphere subdivisions=4
+run uv_auto resolution=256
+run texture_create size=1k
+run set_color color=c81e1e
+key p
+stroke 0.15 0.45 0.85 0.45
+run set_color color=1f4fd0
+stroke 0.5 0.1 0.5 0.9
+click "Paint Layers##tool.paint_layers"
+click "Paint Layers/New"
+run set_color color=f0d020
+stroke 0.2 0.75 0.8 0.75
+expect_value texture_layers == 1
+remember texture_painted painted
+shot painted
+
+# Auto UV again: the islands are packed for the 1K texture now (a new layout); the paint stays put.
+click "Texture Map##tool.texture"
+click "Texture Map/Auto UV"
+wait_idle 120
+expect_status "moved to the new UVs"
+expect_status "1 layer"
+expect_value texture_layers == 1
+expect_value texture_size == 1024
+shot after-auto-uv
+click "Texture Map/Show UVs"
+shot after-auto-uv-layout
+click "Texture Map/Show UVs"
+
+# One undo step brings back the old UVs and the old texture exactly.
+key ctrl+z
+expect_value texture_painted == $painted
+key ctrl+shift+z
+expect_value texture_layers == 1
+
+# Voxel Remesh with Keep Texture (shown because the SubTool has a texture), in the background.
+click "Remesh##tool.remesh"
+expect "Keep Texture##remesh"
+hold ctrl
+hover "Keep Texture##remesh"
+expect_help "projected"
+hold none
+remember triangles before_remesh
+click "Voxel Remesh##geometry.remesh"
+wait_idle 300
+expect_status "texture kept"
+expect_value triangles != $before_remesh
+expect_value texture_size == 1024
+expect_value texture_layers == 1
+expect_value paint_texture == 1
+shot remeshed
+key ctrl+z
+expect_value triangles == $before_remesh
+
+# QRemesh keeps it too; with Keep Texture off the texture is dropped and the status says so.
+click "Geometry##tool.geometry"
+expect "QRemesh/Keep Texture##qremesh"
+click "QRemesh/Quad Remesh"
+wait_idle 300
+expect_status "texture kept"
+expect_value quad_percent == 100
+expect_value texture_size == 1024
+click "Wire##view.polyf"
+shot qremeshed
+click "Wire##view.polyf"
+key ctrl+z
+expect_value triangles == $before_remesh
+click "QRemesh/Keep Texture##qremesh"
+click "QRemesh/Quad Remesh"
+wait_idle 300
+expect_status "texture was dropped"
+expect_value texture_size == 0
+key ctrl+z
+expect_value texture_size == 1024

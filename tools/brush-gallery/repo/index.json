@@ -1,0 +1,300 @@
+{
+  "format": "sculptforge-brush-gallery",
+  "version": 1,
+  "brushes": [
+    {
+      "name": "Chipped Stone",
+      "description": "Knocks rough, eroded chips into stone blocks, walls and cliffs.",
+      "author": "SculptForge",
+      "tags": [
+        "stone",
+        "environment",
+        "weathering"
+      ],
+      "file": "brushes/chipped-stone.sfbrush",
+      "preview": "previews/chipped-stone.png",
+      "sha256": "c7ffc468725fbd5efd7b3ae1c7d270fb63be7a2cb24547bae99f62366072e4ae",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Clay Slab",
+      "description": "Builds up flat-topped strokes of clay for blocking in forms.",
+      "author": "SculptForge",
+      "tags": [
+        "clay",
+        "blocking",
+        "forms"
+      ],
+      "file": "brushes/clay-slab.sfbrush",
+      "preview": "previews/clay-slab.png",
+      "sha256": "4aa8ec9eda58680dd9cbd62bb6b1f26ac70737c4ae2e0d50c73991e71863b66b",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Cracked Earth",
+      "description": "Dry, cracked mud: flattens the ground and splits it into plates.",
+      "author": "SculptForge",
+      "tags": [
+        "environment",
+        "ground",
+        "cracks"
+      ],
+      "file": "brushes/cracked-earth.sfbrush",
+      "preview": "previews/cracked-earth.png",
+      "sha256": "99230163c8d9d8b2e71c3c8e1b2cd377055154bd3fd533cd6b6737911254a866",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Dragon Scales",
+      "description": "Stamps rounded overlapping scales along the stroke.",
+      "author": "SculptForge",
+      "tags": [
+        "creature",
+        "scales",
+        "texture"
+      ],
+      "file": "brushes/dragon-scales.sfbrush",
+      "preview": "previews/dragon-scales.png",
+      "sha256": "8b280a7f656c8193e7d9a6378c94cb98b7e220283b1f325d24b86579f7bf4da1",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Edge Wear",
+      "description": "Chips and softens only the sharp edges and ridges, for weathered props.",
+      "author": "SculptForge",
+      "tags": [
+        "props",
+        "weathering",
+        "hard-surface"
+      ],
+      "file": "brushes/edge-wear.sfbrush",
+      "preview": "previews/edge-wear.png",
+      "sha256": "c0caee8df43a88738bf32c2aac742bca022b6edf8d8e4f316d380dd28483c50e",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Fabric Folds",
+      "description": "Soft, rounded cloth folds with a crisp inner edge.",
+      "author": "SculptForge",
+      "tags": [
+        "fabric",
+        "clothing",
+        "folds"
+      ],
+      "file": "brushes/fabric-folds.sfbrush",
+      "preview": "previews/fabric-folds.png",
+      "sha256": "4f3bc4f8abb61453c00930ce867b039df74cd57e9a8578fc157d16a82993c398",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Hammered Metal",
+      "description": "Soft overlapping hammer dimples for beaten copper, armour and cookware.",
+      "author": "SculptForge",
+      "tags": [
+        "metal",
+        "props",
+        "hard-surface"
+      ],
+      "file": "brushes/hammered-metal.sfbrush",
+      "preview": "previews/hammered-metal.png",
+      "sha256": "0a6c2e543854bbf1ace7c03584d93c7223ba34690ffd15ae2c8f681e63215a59",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Lava Rock",
+      "description": "Pitted, porous volcanic stone and pumice.",
+      "author": "SculptForge",
+      "tags": [
+        "stone",
+        "environment",
+        "texture"
+      ],
+      "file": "brushes/lava-rock.sfbrush",
+      "preview": "previews/lava-rock.png",
+      "sha256": "09508472f41b8dbf602ca235b4b78ab11fb6a637939857840769e470c64fe541",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Orange Peel",
+      "description": "Dense dimpled skin like citrus peel, leather or older skin.",
+      "author": "SculptForge",
+      "tags": [
+        "skin",
+        "texture",
+        "character"
+      ],
+      "file": "brushes/orange-peel.sfbrush",
+      "preview": "previews/orange-peel.png",
+      "sha256": "893f1a1ec7086b0125db2764822cf3bfe6c4fe33cba797b396cc19c484400dfb",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Palette Knife",
+      "description": "Flattens and drags clay sideways like a sculptor's knife.",
+      "author": "SculptForge",
+      "tags": [
+        "clay",
+        "planes",
+        "hard-surface"
+      ],
+      "file": "brushes/palette-knife.sfbrush",
+      "preview": "previews/palette-knife.png",
+      "sha256": "1c35a1edb55bf819f22e7d8a79040bc75ede35075e9c269a46d2598bfed0f247",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Panel Line",
+      "description": "Clean, narrow grooves for hard-surface panel seams.",
+      "author": "SculptForge",
+      "tags": [
+        "hard-surface",
+        "mech",
+        "crease"
+      ],
+      "file": "brushes/panel-line.sfbrush",
+      "preview": "previews/panel-line.png",
+      "sha256": "6b3dc65fca7b3fbb4458303b5bbf68bfafce7491910cfd88211890444a5b483c",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Rasp",
+      "description": "Coarse file and rasp marks for carved wood, stone and rough castings.",
+      "author": "SculptForge",
+      "tags": [
+        "wood",
+        "stone",
+        "texture"
+      ],
+      "file": "brushes/rasp.sfbrush",
+      "preview": "previews/rasp.png",
+      "sha256": "796078c902282b17669675887ee9696b4ab0fc2c8b940822e401912017abad43",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Rope",
+      "description": "A raised, knotted cord for ropes, braids and cables.",
+      "author": "SculptForge",
+      "tags": [
+        "props",
+        "fabric",
+        "cord"
+      ],
+      "file": "brushes/rope.sfbrush",
+      "preview": "previews/rope.png",
+      "sha256": "2371ac38551d9d52173628a901735702b74e786025cd6e368458e33bef9729d4",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Rough Clay",
+      "description": "Lumpy, hand-pressed clay for a traditional sculpted look.",
+      "author": "SculptForge",
+      "tags": [
+        "clay",
+        "blocking",
+        "texture"
+      ],
+      "file": "brushes/rough-clay.sfbrush",
+      "preview": "previews/rough-clay.png",
+      "sha256": "286ea08a9ea8b0f020713f2f6071229548eca628d456bce7d05537b4c06b4b0e",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Scar Tissue",
+      "description": "Raised, puckered scars and healed wounds.",
+      "author": "SculptForge",
+      "tags": [
+        "skin",
+        "character",
+        "creature"
+      ],
+      "file": "brushes/scar-tissue.sfbrush",
+      "preview": "previews/scar-tissue.png",
+      "sha256": "3f01aa14511af0232cc414b341ab620ad1f61966d6329126f7d968027bc1cad9",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Skin Pores",
+      "description": "Sprinkles tiny pores for close-up skin detail.",
+      "author": "SculptForge",
+      "tags": [
+        "skin",
+        "texture",
+        "character"
+      ],
+      "file": "brushes/skin-pores.sfbrush",
+      "preview": "previews/skin-pores.png",
+      "sha256": "7b984fab853ccebf6b422059cc733cb3ad8f272b6456ae302c0230d0da864623",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Snake Scales",
+      "description": "Tight rows of small, smooth scales for snakes, lizards and fish.",
+      "author": "SculptForge",
+      "tags": [
+        "creature",
+        "scales",
+        "texture"
+      ],
+      "file": "brushes/snake-scales.sfbrush",
+      "preview": "previews/snake-scales.png",
+      "sha256": "c035ed01b287843b11fd56224b73d1e10b1fd6cc779034920b383b783c4458a0",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Stone Chisel",
+      "description": "Scrapes hard planes and breaks them up with cracks for rocks and ruins.",
+      "author": "SculptForge",
+      "tags": [
+        "stone",
+        "environment",
+        "hard-surface"
+      ],
+      "file": "brushes/stone-chisel.sfbrush",
+      "preview": "previews/stone-chisel.png",
+      "sha256": "7db8ad4c84793a093fc21bd724bc63c127dde0528df32d677fe5552378c299e4",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Tree Bark",
+      "description": "Deep, sinewy bark ridges for trunks, roots and old wood.",
+      "author": "SculptForge",
+      "tags": [
+        "environment",
+        "wood",
+        "texture"
+      ],
+      "file": "brushes/tree-bark.sfbrush",
+      "preview": "previews/tree-bark.png",
+      "sha256": "46f15969f96e90b1bbb4aedfb2a00ea427e29c57790b77750ccb4b773783a019",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Veins",
+      "description": "Soft raised veins and tendons under the skin.",
+      "author": "SculptForge",
+      "tags": [
+        "skin",
+        "anatomy",
+        "character"
+      ],
+      "file": "brushes/veins.sfbrush",
+      "preview": "previews/veins.png",
+      "sha256": "0f5d91734d140856c7a5cd49798be8dc0a10a10eb388270d67a9f2f098f36a52",
+      "added": "2026-10-22"
+    },
+    {
+      "name": "Wrinkle",
+      "description": "Fine, sharp creases for skin folds and fabric wrinkles.",
+      "author": "SculptForge",
+      "tags": [
+        "skin",
+        "fabric",
+        "crease"
+      ],
+      "file": "brushes/wrinkle.sfbrush",
+      "preview": "previews/wrinkle.png",
+      "sha256": "7051077d8ffb4b254d0fc1eb117b12124f6aef2bd12dd0d9e440e3ab0cb9a48a",
+      "added": "2026-10-22"
+    }
+  ]
+}

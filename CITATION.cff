@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use SculptForge in your work, please cite it as below."
+title: "SculptForge"
+abstract: "Free and open-source digital sculpting for Linux, macOS and Windows, with game-engine pipelines and free built-in AI."
+type: software
+authors:
+  - name: "The SculptForge contributors"
+license: GPL-3.0-or-later
+repository-code: "https://github.com/islandmed/SculptForge"
+url: "https://islandmed.github.io/SculptForge/"
+version: 0.10.9
+date-released: 2026-11-02
+keywords:
+  - sculpting
+  - 3d
+  - game-development
+  - gaussian-splatting
+  - openusd

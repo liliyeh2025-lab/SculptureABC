@@ -1,0 +1,138 @@
+{
+  "1": {
+    "class_type": "StringTrim",
+    "inputs": {"string": "a friendly cartoon teddy bear sitting", "mode": "Both"},
+    "_meta": {"title": "sf_prompt"}
+  },
+  "2": {
+    "class_type": "StringConcatenate",
+    "inputs": {
+      "string_a": ["1", 0],
+      "string_b": "a single object, centered, whole object in view, plain white background, soft even studio lighting, clean 3D clay render, no text",
+      "delimiter": ", "
+    },
+    "_meta": {"title": "Add 3D-friendly framing"}
+  },
+  "3": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {"ckpt_name": "flux1-schnell-fp8.safetensors"},
+    "_meta": {"title": "Load FLUX.1 schnell (models/checkpoints)"}
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {"text": ["2", 0], "clip": ["3", 1]},
+    "_meta": {"title": "Prompt"}
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {"text": "", "clip": ["3", 1]},
+    "_meta": {"title": "Negative (unused by FLUX at cfg 1)"}
+  },
+  "6": {
+    "class_type": "EmptySD3LatentImage",
+    "inputs": {"width": 1024, "height": 1024, "batch_size": 1},
+    "_meta": {"title": "Empty Latent 1024x1024"}
+  },
+  "7": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["3", 0],
+      "positive": ["4", 0],
+      "negative": ["5", 0],
+      "latent_image": ["6", 0],
+      "seed": 1234,
+      "steps": 4,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    },
+    "_meta": {"title": "KSampler (image)"}
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {"samples": ["7", 0], "vae": ["3", 2]},
+    "_meta": {"title": "VAE Decode"}
+  },
+  "9": {
+    "class_type": "LoadBackgroundRemovalModel",
+    "inputs": {"bg_removal_name": "birefnet.safetensors"},
+    "_meta": {"title": "Load BiRefNet (models/background_removal)"}
+  },
+  "10": {
+    "class_type": "RemoveBackground",
+    "inputs": {"bg_removal_model": ["9", 0], "image": ["8", 0]},
+    "_meta": {"title": "Foreground mask"}
+  },
+  "11": {
+    "class_type": "EmptyImage",
+    "inputs": {"width": 1024, "height": 1024, "batch_size": 1, "color": 16777215},
+    "_meta": {"title": "White backdrop"}
+  },
+  "12": {
+    "class_type": "ImageCompositeMasked",
+    "inputs": {"destination": ["11", 0], "source": ["8", 0], "x": 0, "y": 0, "resize_source": false, "mask": ["10", 0]},
+    "_meta": {"title": "Object on white"}
+  },
+  "13": {
+    "class_type": "SaveImage",
+    "inputs": {"images": ["12", 0], "filename_prefix": "sculptforge/text-to-3d_concept"},
+    "_meta": {"title": "Save concept image"}
+  },
+  "20": {
+    "class_type": "ImageOnlyCheckpointLoader",
+    "inputs": {"ckpt_name": "hunyuan_3d_v2.1.safetensors"},
+    "_meta": {"title": "Load Hunyuan3D 2.1 (models/checkpoints)"}
+  },
+  "21": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": {"model": ["20", 0], "shift": 1.0, "sampling": "flow"},
+    "_meta": {"title": "ModelSamplingAuraFlow"}
+  },
+  "22": {
+    "class_type": "CLIPVisionEncode",
+    "inputs": {"clip_vision": ["20", 1], "image": ["12", 0], "crop": "center"},
+    "_meta": {"title": "CLIP Vision Encode"}
+  },
+  "23": {
+    "class_type": "Hunyuan3Dv2Conditioning",
+    "inputs": {"clip_vision_output": ["22", 0]},
+    "_meta": {"title": "Hunyuan3Dv2 Conditioning"}
+  },
+  "24": {
+    "class_type": "EmptyLatentHunyuan3Dv2",
+    "inputs": {"resolution": 4096, "batch_size": 1},
+    "_meta": {"title": "Empty Latent Hunyuan3Dv2"}
+  },
+  "25": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["21", 0],
+      "positive": ["23", 0],
+      "negative": ["23", 1],
+      "latent_image": ["24", 0],
+      "seed": 1234,
+      "steps": 30,
+      "cfg": 5.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1.0
+    },
+    "_meta": {"title": "KSampler (3D)"}
+  },
+  "26": {
+    "class_type": "VAEDecodeHunyuan3D",
+    "inputs": {"samples": ["25", 0], "vae": ["20", 2], "num_chunks": 8000, "octree_resolution": 256},
+    "_meta": {"title": "VAE Decode Hunyuan3D"}
+  },
+  "27": {
+    "class_type": "VoxelToMesh",
+    "inputs": {"voxel": ["26", 0], "algorithm": "surface net", "threshold": 0.6},
+    "_meta": {"title": "Voxel to Mesh"}
+  },
+  "28": {
+    "class_type": "SaveGLB",
+    "inputs": {"mesh": ["27", 0], "filename_prefix": "3d/sculptforge_text-to-3d"},
+    "_meta": {"title": "Save GLB"}
+  }
+}

@@ -1,0 +1,48 @@
+# Checks every pull request: only brushes/ and previews/ may change, and every
+# brush must load in SculptForge exactly as written (build_index.py round-trips
+# it through sculptforge-cli built from the latest SculptForge source).
+name: Validate brushes
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: gallery
+          fetch-depth: 0
+      - name: Only brush files changed
+        if: github.event_name == 'pull_request'
+        working-directory: gallery
+        run: |
+          bad=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" \
+                | grep -Ev '^(brushes/[a-z0-9-]+\.sfbrush|previews/[a-z0-9-]+\.png)$' || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Pull requests may only add or change brushes/<name>.sfbrush and previews/<name>.png. Also changed:"
+            echo "$bad"
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          repository: islandmed/SculptForge
+          path: sculptforge
+      - name: Build sculptforge-cli
+        working-directory: sculptforge
+        run: |
+          sudo ./packaging/linux/install-build-deps.sh
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSCULPTFORGE_BUILD_APP=OFF \
+                -DSCULPTFORGE_BUILD_TESTS=OFF -DSCULPTFORGE_BUILD_PYTHON=OFF
+          cmake --build build --target sculptforge-cli --parallel
+      - name: Validate
+        run: python3 sculptforge/tools/brush-gallery/build_index.py gallery --validate-only --cli sculptforge/build/sculptforge-cli

@@ -1,0 +1,29 @@
+{
+  "name": "Orange Peel",
+  "description": "Dense dimpled skin like citrus peel, leather or older skin.",
+  "direction": "normal",
+  "depth": -0.4,
+  "plane": "none",
+  "planeAmount": 0.5,
+  "pinch": 0,
+  "drag": 0,
+  "smooth": 0,
+  "hardness": 0.3,
+  "tipSharpness": 0,
+  "pattern": "pores",
+  "patternScale": 0.12,
+  "patternAmount": 1.0,
+  "spacing": 0.12,
+  "jitter": 0.5,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "skin",
+    "texture",
+    "character"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

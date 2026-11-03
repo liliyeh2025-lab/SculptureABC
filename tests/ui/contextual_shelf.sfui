@@ -1,0 +1,25 @@
+# Contextual shelf buttons (docs/ui-design.md, "Contextual controls"): the top shelf's Vertex / Texture paint
+# target only shows when the SubTool has a texture to paint into, instead of sitting there greyed out.
+run new_sphere subdivisions=3
+expect_value texture_size == 0
+expect "Rgb##draw.rgb"
+expect_not "Vertex##draw.paint_vertex"
+expect_not "Texture##draw.paint_texture"
+shot no-texture
+
+# Give it UVs and a texture: the paint target appears, set to Texture.
+run uv_auto
+run texture_create size=1024
+expect_value texture_size == 1024
+expect "Vertex##draw.paint_vertex"
+expect "Texture##draw.paint_texture"
+expect_value paint_texture == 1
+click "Vertex##draw.paint_vertex"
+expect_value paint_texture == 0
+shot with-texture
+
+# Undo back past the texture: the buttons go again.
+key ctrl+z
+key ctrl+z
+expect_value texture_size == 0
+expect_not "Vertex##draw.paint_vertex"

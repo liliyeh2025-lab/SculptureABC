@@ -1,0 +1,1 @@
+ufbx.h, ufbx.c, LICENSE from https://github.com/ufbx/ufbx commit 5955c5c0b042ac2dc6f32955ab206aaec0620cfc (v0.23.1; MIT or public domain)

@@ -1,0 +1,97 @@
+# Brush sharing: brushes refined in Brush Lab are saved to the library, shared as a brush code
+# (right-click > Copy brush code), deleted, and pasted back with Ctrl+V or Brush Lab's Paste brush.
+# UI tests get an empty library of their own in --ui-out/brush-library.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+expect_value user_brushes == 0
+expect_value library_files == 0
+# The Brush palette (with the custom brushes) goes into the right tray; Brush Lab opens from the top shelf.
+click "AI Brush"
+click "Brush##palette.brush"
+click "Brush/##totray"
+
+# A brush made this session is marked unsaved until it's refined in Brush Lab.
+run brush_create name="Bark Ridges" depth=0.3 pattern=ridges patternAmount=0.6
+expect "Bark Ridges"
+expect_text Bark Ridges [unsaved]
+click "Recipe: Bark Ridges"
+click "Brush Lab/Front faces only"
+wait 1.2
+expect_value library_files == 1
+expect_value user_brushes == 1
+expect_status Saved 'Bark Ridges' to your brush library
+expect_no_text Bark Ridges [unsaved]
+shot saved
+
+# Copy its code, then delete it (with a confirmation).
+right_click "Bark Ridges"
+expect "Copy brush code"
+expect "Reveal in folder"
+shot menu
+click "Copy brush code"
+expect_clipboard sfbrush1:
+expect_status Copied the brush code for 'Bark Ridges'
+right_click "Bark Ridges"
+click "Delete...##brush"
+expect_text Delete 'Bark Ridges' from your brush library?
+shot confirm-delete
+click "Delete brush?/Delete"
+expect_not "Bark Ridges"
+expect_value library_files == 0
+expect_value user_brushes == 0
+
+# Paste the code back with Ctrl+V in the viewport: installed into the library again.
+key ctrl+v
+expect_status Pasted brush 'Bark Ridges' - it's in your brush library
+expect "Bark Ridges"
+expect_value library_files == 1
+run brush_library
+expect_status Bark Ridges [user]
+
+# Text that isn't a brush is refused with a message.
+clipboard just some notes, not a brush
+key ctrl+v
+expect_status No brush found
+expect_value library_files == 1
+
+# A code someone shared in chat (with words around it), via Brush Lab's Paste brush.
+clipboard "Try my moss: sfbrush1:eyJuYW1lIjoiU2hhcmVkIE1vc3MiLCJkZXNjcmlwdGlvbiI6IiIsImRpcmVjdGlvbiI6Im5vcm1hbCIsImRlcHRoIjowLjIsInBsYW5lIjoibm9uZSIsInBsYW5lQW1vdW50IjowLjUsInBpbmNoIjowLCJkcmFnIjowLCJzbW9vdGgiOjAsImhhcmRuZXNzIjowLCJ0aXBTaGFycG5lc3MiOjAsInBhdHRlcm4iOiJub2lzZSIsInBhdHRlcm5TY2FsZSI6MC4yLCJwYXR0ZXJuQW1vdW50IjowLjUsInNwYWNpbmciOjAuMTUsImppdHRlciI6MCwicHJlc3N1cmVDdXJ2ZSI6MSwiZnJvbnRGYWNlc09ubHkiOmZhbHNlLCJjYXZpdHlNYXNrIjowfQ enjoy"
+click "Paste brush"
+expect_status Pasted brush 'Shared Moss'
+expect "Shared Moss"
+expect_value library_files == 2
+
+# Rename it from the menu: the library file follows.
+right_click "Shared Moss"
+click "Rename...##brush"
+type "Rename brush/##newname" Wet Moss
+click "Rename brush/Rename"
+expect "Wet Moss"
+expect_not "Shared Moss"
+expect_value library_files == 2
+expect_value user_brushes == 2
+
+# Gallery installs are tagged; the tooltip says where a brush lives.
+run brush_install source=gallery code=sfbrush1:eyJuYW1lIjoiU2hhcmVkIE1vc3MiLCJkZXNjcmlwdGlvbiI6IiIsImRpcmVjdGlvbiI6Im5vcm1hbCIsImRlcHRoIjowLjIsInBsYW5lIjoibm9uZSIsInBsYW5lQW1vdW50IjowLjUsInBpbmNoIjowLCJkcmFnIjowLCJzbW9vdGgiOjAsImhhcmRuZXNzIjowLCJ0aXBTaGFycG5lc3MiOjAsInBhdHRlcm4iOiJub2lzZSIsInBhdHRlcm5TY2FsZSI6MC4yLCJwYXR0ZXJuQW1vdW50IjowLjUsInNwYWNpbmciOjAuMTUsImppdHRlciI6MCwicHJlc3N1cmVDdXJ2ZSI6MSwiZnJvbnRGYWNlc09ubHkiOmZhbHNlLCJjYXZpdHlNYXNrIjowfQ
+# (The tray's brush grid is taller than the tray now: filter it to the mosses.)
+type "##brushfilter" Moss
+wait 0.2
+expect_text Shared Moss [gallery]
+hover "Shared Moss"
+expect_text From the community gallery
+shot gallery-tooltip
+type "##brushfilter" Wrinkle
+
+# Built-in brushes can't be deleted; refining one saves the artist's version, tagged "yours".
+right_click "Wrinkle"
+click "Rename...##brush"
+expect_text The built-in brush stays as it is
+shot rename-builtin
+key escape
+click "Wrinkle"
+expect "Recipe: Wrinkle"    # the recipe section stays open
+click "Brush Lab/Front faces only"
+wait 1.2
+expect_status Saved your version of 'Wrinkle'
+expect_text Wrinkle [yours]
+expect_value library_files == 4
+shot final

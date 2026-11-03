@@ -1,0 +1,122 @@
+# ZBrush's Ctrl brushes: while Ctrl is held the shelf shows the mask brush, and the Brush / Stroke pickers opened
+# with Ctrl held pick MaskPen / MaskLasso / MaskRect; Ctrl+Shift does the same for SelectRect / SelectLasso. Also
+# Polygroups > Group by UVs.
+run new_sphere subdivisions=5
+expect_value mask_shape == 0
+expect_value hide_shape == 2
+
+# Holding Ctrl: the brush tile turns into MaskPen, the stroke tile into its Dots.
+hold ctrl
+wait 0.1
+expect_text Mask Pen
+shot ctrl-held-shelf
+hold none
+expect_no_text Mask Pen
+
+# Ctrl+B opens the brush picker with the mask brushes.
+hold ctrl
+key ctrl+b
+wait 0.1
+expect "Mask Lasso##held.mask.lasso"
+hover "Mask Lasso##held.mask.lasso"
+expect_help "lasso"
+shot ctrl-brush-picker
+click "Mask Lasso##held.mask.lasso"
+hold none
+expect_value mask_shape == 1
+expect_not "Mask Lasso##held.mask.lasso"
+
+# Clicking the shelf's stroke tile with Ctrl held offers the mask's strokes.
+hold ctrl
+click "##tile.stroke"
+wait 0.1
+expect "Rect##held.mask.rect"
+shot ctrl-stroke-picker
+click "Rect##held.mask.rect"
+hold none
+expect_value mask_shape == 2
+
+# The picked MaskRect masks with Ctrl+drag (starting on the background) and Tool > Masking agrees.
+hold ctrl
+drag_path -0.2 -0.05 0.5 1.2
+hold none
+expect_value masked > 1000
+key ctrl+z
+expect_value masked == 0
+click "Masking"
+click "Mask Pen##mask.pen"
+expect_value mask_shape == 0
+
+# Without Ctrl the pickers are the usual ones.
+key b
+wait 0.1
+expect_not "Mask Lasso##held.mask.lasso"
+key escape
+
+# Ctrl+Shift: the selection brushes. SelectLasso from the brush picker, SelectRect from the stroke picker.
+hold ctrl+shift
+wait 0.1
+expect_text Select Rectangle
+shot ctrl-shift-held-shelf
+click "##tile.brush"
+wait 0.1
+expect "Select Lasso##held.select.lasso"
+shot ctrl-shift-brush-picker
+click "Select Lasso##held.select.lasso"
+hold none
+expect_value hide_shape == 1
+
+# SelectLasso from the model: Ctrl+Shift keeps the inside, Ctrl+Shift+Alt hides it; same from the background.
+hold ctrl+shift
+drag_path 0.3 0.3 0.7 0.3 0.7 0.7 0.3 0.7
+hold none
+expect_value hidden > 1000
+remember hidden kept
+hold ctrl+shift+alt
+drag_path -0.2 -0.05 0.45 -0.05 0.45 1.2 -0.2 1.2
+hold none
+expect_value hidden > $kept
+click "Visibility"
+click "Show all"
+expect_value hidden == 0
+
+hold ctrl+shift
+click "##tile.stroke"
+wait 0.1
+click "Rect##held.select.rect"
+hold none
+expect_value hide_shape == 2
+# SelectRect from the background, then with Alt from the model. (X symmetry is on: the mirror image of the
+# rectangle is kept too, so it stops short of the middle to leave something to hide.)
+hold ctrl+shift
+drag_path -0.2 -0.05 0.3 1.2
+hold none
+expect_value hidden > 1000
+remember hidden kept
+hold ctrl+shift+alt
+drag_path 0.1 0.1 0.3 0.9
+hold none
+expect_value hidden > $kept
+shot select-rect-hidden
+click "Show all"
+
+# Polygroups > Group by UVs: refused without UVs, one group per island after Auto UV.
+click "Face Groups"
+hold ctrl
+hover "Group by UVs##polygroup.uv_groups"
+expect_help "UV island"
+hold none
+click "Group by UVs##polygroup.uv_groups"
+expect_status "no UVs"
+expect_value groups == 1
+click "Texture Map##tool.texture"
+click "Texture Map/Auto UV"
+wait_idle 120
+expect_value uvs == 1
+click "Face Groups"
+click "Group by UVs##polygroup.uv_groups"
+expect_value groups > 1
+expect_value show_polygroups == 1
+shot uv-groups
+key ctrl+z
+expect_value groups == 1

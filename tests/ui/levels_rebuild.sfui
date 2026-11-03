@@ -1,0 +1,64 @@
+# Subdivision levels and the tools that rebuild the mesh (Decimate, Subdivide, Remesh, QRemesh, Delete Hidden,
+# merging and splitting SubTools): they work on the current level, the status line says the levels were removed
+# and which one became the base, and Ctrl+Z brings every level back. Selecting another SubTool and coming back
+# still steps between the levels.
+run new_sphere subdivisions=1
+run subtool_append type=cube name=Box
+run subtool_delete index=0
+orbit 140 -70
+key f
+click "Geometry##tool.geometry"
+click "Geometry/Reconstruct Subdiv"
+click "Geometry/Reconstruct Subdiv"
+expect_value sdiv_levels == 3
+expect_value sdiv == 1
+
+# Up to SDiv 2 and sculpt there (an edit not folded into the levels yet).
+key d
+expect_value sdiv == 2
+expect_value triangles == 6912
+snapshot
+stroke 0.3 0.4 0.7 0.5
+expect_value moved > 10
+
+# Decimate at SDiv 2: half of SDiv 2's triangles, and the status line says what happened to the levels.
+click "Geometry/Decimate"
+expect_value sdiv_levels == 0
+expect_value triangles < 6912
+expect_value triangles > 1000
+expect_status "Subdivision levels removed: SDiv 2 of 3 kept as the new base"
+expect_text "No subdivision levels"
+shot decimated
+
+# Undo: all three levels again, at SDiv 2 with the stroke.
+key ctrl+z
+expect_value sdiv_levels == 3
+expect_value sdiv == 2
+expect_value triangles == 6912
+expect_text "SDiv 2 / 3"
+shot levels-back
+
+# Subdivide (the flat one, without levels) from SDiv 2: four times its triangles.
+click "Geometry/Subdivide"
+expect_value triangles == 27648
+expect_value sdiv_levels == 0
+expect_status "Subdivision levels removed: SDiv 2 of 3 kept as the new base"
+key ctrl+z
+expect_value sdiv_levels == 3
+expect_value sdiv == 2
+
+# Another SubTool and back: the levels step as before (the cached levels of the SubTool left are freed).
+run subtool_append type=sphere name=Eye
+expect_value sdiv_levels == 0
+run subtool_select name=Box
+expect_value sdiv == 2
+key d
+expect_value sdiv == 3
+expect_value triangles == 27648
+key shift+d
+key shift+d
+expect_value sdiv == 1
+expect_value triangles == 1728
+key d
+expect_value sdiv == 2
+shot after-switching

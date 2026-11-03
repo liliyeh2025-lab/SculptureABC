@@ -1,0 +1,48 @@
+# Community brushes: browse a gallery (the seed content in tools/brush-gallery/repo, read from disk the way a
+# studio mirror would be), search it, filter by tag, install a brush and see it in the library; then a
+# gallery that can't be reached shows a clear error instead of an empty window.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+env SCULPTFORGE_BRUSH_GALLERY $SCRIPT_DIR/../../tools/brush-gallery/repo
+expect_value brushes == 7
+click "Brush##palette.brush"
+click "Community brushes##ui.brush_gallery"
+wait_idle 30
+expect_text 21 brushes
+expect "Community brushes/Share yours"
+wait 1
+wait_idle 30
+wait 0.5
+shot gallery
+
+type "##gallerysearch" scales
+expect_text 2 brushes of 21
+expect "Installed##Dragon Scales"
+expect "Install##Snake Scales"
+wait_idle 30
+wait 0.5
+shot search
+
+click "Install##Snake Scales"
+wait_idle 30
+expect "Installed##Snake Scales"
+expect_value brushes == 8
+expect_status Snake Scales
+shot installed
+
+click "Community brushes/x##clearsearch"
+expect_text 21 brushes
+click "##gallerytag"
+click "hard-surface"
+expect_text 5 brushes of 21
+expect "Install##Panel Line"
+wait_idle 30
+wait 0.5
+shot tag-filter
+
+env SCULPTFORGE_BRUSH_GALLERY $SCRIPT_DIR/no-such-gallery
+click "Community brushes/Refresh"
+wait_idle 30
+expect_text Can't reach the brush gallery
+expect "Try again"
+expect_no_text 21 brushes
+shot unreachable

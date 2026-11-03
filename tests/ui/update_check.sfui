@@ -1,0 +1,30 @@
+# Help > Check for updates: a newer version shows the banner (Skip this version hides it), the same or an older one
+# says SculptForge is up to date, and a feed that can't be read says so. The feed is a local file here
+# (SF_UPDATE_FEED); UI tests never check automatically.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+run new_sphere subdivisions=3
+env SF_UPDATE_FEED $SCRIPT_DIR/data/update_newer.json
+click "Help##palette.help"
+click "Check for updates##help.check_updates"
+wait_idle 20
+expect_text "SculptForge 99.0.0 is available"
+expect_text "bug-fix and security releases go out to everyone the same day"
+expect "Become an Insider"
+expect_text "Twice as fast"
+expect "Download"
+shot update-banner
+click "Skip this version"
+expect_not "Skip this version"
+
+env SF_UPDATE_FEED $SCRIPT_DIR/data/update_older.json
+click "Help##palette.help"
+click "Check for updates##help.check_updates"
+wait_idle 20
+expect_status "is the newest version"
+expect_not "Skip this version"
+
+env SF_UPDATE_FEED $SCRIPT_DIR/data/no_such_feed.json
+click "Help##palette.help"
+click "Check for updates##help.check_updates"
+wait_idle 20
+expect_status "Couldn't check for updates"

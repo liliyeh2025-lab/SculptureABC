@@ -1,0 +1,107 @@
+# Ctrl-hover help, the command palette, the script console and Store Config / Restore UI
+# (ui-spec sections 7, 8 and 9.2).
+run new_sphere subdivisions=3
+expect_value triangles == 1280
+
+# F1: the Controls sheet is generated from the action registry. Ctrl+hover explains any item,
+# Ctrl+Alt+hover shows a command's scripting parameters.
+key f1
+type Controls/##controls_filter divide
+expect Controls/Divide
+hold ctrl
+hover Controls/Divide
+expect_help "subdivision level"
+expect_help Ctrl+D
+shot help_ctrl_hover
+hold ctrl+alt
+hover Controls/Divide
+expect_help "Smt: smooth the new level"
+shot help_ctrl_alt_hover
+hold none
+wait 0.2
+expect_no_text "subdivision level"
+
+# ZBrush-style shortcut assignment: double-click a row (or Ctrl+Alt+click a button), press the key.
+type Controls/##controls_filter wire
+double_click Controls/Wireframe
+expect_status "Press a key for 'Wireframe'"
+key ctrl+k
+expect_status "Wireframe: Ctrl+K"
+key ctrl+k
+expect_value wireframe == 1
+key ctrl+k
+expect_value wireframe == 0
+key f1
+expect_not Controls/Divide
+
+# Command palette (F3): fuzzy search, Enter runs.
+key f3
+expect_value command_palette_open == 1
+type "##Command palette" subdivide
+expect_text "Tool > Geometry"
+shot command_palette
+key enter
+expect_value triangles == 5120
+expect_value command_palette_open == 0
+key ctrl+z
+expect_value triangles == 1280
+
+# Commands that need parameters open in the console with their name typed.
+key f3
+type "##Command palette" "layer set weight"
+key enter
+expect_value console_open == 1
+
+# The console (backtick): every command is echoed as a script line; the input runs statements.
+type Console/##console "remesh resolution=64"
+key enter
+expect_text "> remesh resolution=64"
+expect_value triangles > 30000
+type Console/##console subdivi
+key tab
+key enter
+expect_text "> subdivide"
+expect_value triangles > 120000
+type Console/##console "help remesh"
+key enter
+expect_text "Voxels across the longest side"
+type Console/##console "nonsense_command x=1"
+key enter
+expect_text "Unknown command 'nonsense_command'"
+shot console
+hold ctrl
+hover "Console/Copy session as script"
+expect_help "macro recorder"
+hold none
+click "Console/Copy session as script"
+expect_clipboard "remesh resolution=64"
+expect_clipboard "subdivide"
+
+# Store Config (Ctrl+Shift+I) writes ui.json; Restore Standard UI resets; Restore Custom UI brings it back.
+click "Console/Clear console"
+expect_no_text "> remesh"
+key ctrl+shift+i
+expect_status "UI configuration stored"
+expect_value ui_config == 1
+key f3
+type "##Command palette" "restore standard"
+key enter
+expect_status "Standard UI restored"
+expect_value console_open == 0
+key shift+f
+expect_value wireframe == 1
+key shift+f
+key f3
+type "##Command palette" "restore custom"
+key enter
+expect_status "Custom UI restored"
+expect_value console_open == 1
+key ctrl+k
+expect_value wireframe == 1
+
+# The console's close button; then the console key opens it again.
+click "Console/###console_close"
+expect_value console_open == 0
+key backtick
+expect_value console_open == 1
+shot console_reopened

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SculptForge for studios - SculptForge User Guide</title>
+  <meta name="description" content="SculptForge is built to drop into animation, VFX and game studios that run their own pipelines: native on Linux, scriptable, standards-based, with no licence server and nothing that phones home. This chapter is for pipeline TDs and IT: the VFX Reference Platform builds, Rez deployment, shared brush ">
+  <meta name="theme-color" content="#111114">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg?v=2">
+  <link rel="icon" type="image/png" href="../img/favicon-64.png?v=2">
+  <link rel="apple-touch-icon" href="../img/icon-256.png?v=2">
+  <link rel="canonical" href="https://sculptforge.app/guide/studios.html">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="SculptForge for studios - SculptForge User Guide">
+  <meta property="og:description" content="SculptForge is built to drop into animation, VFX and game studios that run their own pipelines: native on Linux, scriptable, standards-based, with no licence server and nothing that phones home. This chapter is for pipeline TDs and IT: the VFX Reference Platform builds, Rez deployment, shared brush ">
+  <meta property="og:image" content="https://sculptforge.app/img/social-preview.png?v=3">
+  <meta property="og:url" content="https://sculptforge.app/guide/studios.html">
+  <link rel="stylesheet" href="../style.css?v=19">
+  <script src="../motion.js?v=11" defer></script>
+  <script data-goatcounter="https://sculptforge.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+  <script src="search-index.js?v=47" defer></script>
+</head>
+<body class="guide-page" data-prev="packs-and-macros.html" data-next="shortcuts.html">
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="../index.html"><img src="../img/logo.svg?v=2" alt="" width="34" height="34"><span>SculptForge</span></a>
+      <nav aria-label="Main">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#demos">Demos</a>
+        <a href="../brushes.html">Brushes</a>
+        <a href="index.html" aria-current="page">Guide</a>
+        <a class="nav-dl" href="../index.html#download">Download</a>
+        <a class="gh" href="https://discord.gg/gWrYkEmQhH">Discord</a>
+        <a class="gh" href="https://github.com/islandmed/SculptForge">GitHub</a>
+      </nav>
+    </div>
+  </header>
+  <div class="wrap guide-layout">
+    <div class="guide-side">
+      <button class="toc-toggle" type="button" aria-expanded="false" aria-controls="guide-toc">
+        <span>Contents</span><span class="toc-current">SculptForge for studios</span></button>
+      <div id="guide-toc" class="toc-panel">
+        <div class="guide-search" role="search">
+          <input type="search" id="guide-q" placeholder="Search the guide" aria-label="Search the guide" autocomplete="off">
+          <div class="search-results" id="guide-results" hidden></div>
+        </div>
+        <nav class="toc" aria-label="User guide"><a class="toc-home" href="index.html">Contents</a><p class="toc-group">Getting started</p><ul><li><a href="welcome.html">Welcome to SculptForge</a></li><li><a href="first-sculpt.html">Your first sculpt in 10 minutes</a></li><li><a href="whats-new.html">What&#x27;s new</a></li><li><a href="coming-from-zbrush.html">Coming from ZBrush</a></li><li><a href="installing.html">Install SculptForge on Windows, macOS and Linux</a></li><li><a href="interface.html">The interface</a></li><li><a href="navigation.html">Navigating the view</a></li></ul><p class="toc-group">Sculpting</p><ul><li><a href="sculpting.html">Sculpting and brushes</a></li><li><a href="brush-lab.html">Brush Lab and sharing brushes</a></li><li><a href="masking.html">Masking</a></li><li><a href="face-groups.html">Face Groups and visibility</a></li><li><a href="selection-sets.html">Selection sets and morph targets</a></li><li><a href="parts.html">Parts</a></li><li><a href="forge-spheres.html">Forge Spheres</a></li><li><a href="vertex-paint.html">Vertex Paint and materials</a></li><li><a href="texture-painting.html">Texture painting</a></li><li><a href="uv-editor.html">UV Editor</a></li><li><a href="pbr-painting.html">Material painting (PBR)</a></li><li><a href="fill-layers.html">Fill layers, Mesh Maps and Material Recipes</a></li><li><a href="layers.html">Sculpt layers and blend shapes</a></li><li><a href="facial-shapes.html">Facial shapes and live face</a></li><li><a href="subdivision-levels.html">Subdivision levels</a></li><li><a href="micro-levels.html">Micro levels: hundreds of millions of polygons</a></li><li><a href="dynamic-topology.html">Dynamic topology</a></li><li><a href="timeline.html">Sculpt Timeline and timelapse</a></li><li><a href="gizmo.html">Moving, rotating and posing (Gizmo)</a></li><li><a href="geometry.html">Subdivide, remesh, decimate and LODs</a></li><li><a href="cut.html">Cut: line, lasso, rectangle and polyline</a></li><li><a href="retopology.html">Quad retopology and detail projection</a></li></ul><p class="toc-group">AI and capture</p><ul><li><a href="generate-3d.html">Image and text to 3D</a></li><li><a href="splats.html">Gaussian splats</a></li><li><a href="scan-to-splat.html">Scan an object into a splat</a></li><li><a href="scan-to-sculptable.html">From scan to sculptable mesh</a></li><li><a href="phone-capture.html">Phone capture and AR</a></li></ul><p class="toc-group">Files and pipelines</p><ul><li><a href="baking.html">Baking normal and displacement maps</a></li><li><a href="exporting.html">Exporting, Unreal and ZBrush</a></li><li><a href="export-presets.html">Export presets</a></li><li><a href="blender.html">Working with Blender</a></li><li><a href="maya.html">Working with Maya</a></li><li><a href="projects.html">Projects, autosave and snapshots</a></li><li><a href="scripting.html">Scripting and automation</a></li><li><a href="packs-and-macros.html">Packs and macros</a></li><li><a href="studios.html" class="current" aria-current="page">SculptForge for studios</a><ul class="toc-sections"><li><a href="#vfx-reference-platform-builds">VFX Reference Platform builds</a></li><li><a href="#deploy-with-rez">Deploy with Rez</a></li><li><a href="#studio-brush-libraries">Studio brush libraries</a></li><li><a href="#environment-variables">Environment variables</a></li><li><a href="#headless-and-farm-use">Headless and farm use</a></li><li><a href="#formats-in-a-pipeline">Formats in a pipeline</a></li><li><a href="#licensing">Licensing</a></li><li><a href="#studio-membership">Studio membership</a></li><li><a href="#studio-onboarding">Studio onboarding</a></li><li><a href="#not-yet">Not yet</a></li><li><a href="#see-also">See also</a></li></ul></li></ul><p class="toc-group">Reference</p><ul><li><a href="shortcuts.html">Keyboard and mouse</a></li><li><a href="performance.html">Performance and big meshes</a></li><li><a href="troubleshooting.html">Troubleshooting: tablets, display, crashes and FAQ</a></li><li><a href="glossary.html">Glossary</a></li></ul></nav>
+      </div>
+    </div>
+    <main class="guide-main" id="top">
+      <article class="guide-article">
+<h1 id="sculptforge-for-studios">SculptForge for studios</h1>
+<p>SculptForge is built to drop into animation, VFX and game studios that run their own pipelines: native on Linux, scriptable, standards-based, with no licence server and nothing that phones home. This chapter is for pipeline TDs and IT: the VFX Reference Platform builds, Rez deployment, shared brush libraries, environment variables, headless use and licensing.</p>
+<h2 id="vfx-reference-platform-builds">VFX Reference Platform builds<a class="anchor" href="#vfx-reference-platform-builds" aria-label="Link to this section">#</a></h2>
+<p>SculptForge tracks the <a href="https://vfxplatform.com" rel="noopener">VFX Reference Platform</a>. Every commit is built and tested in the platform&#x27;s reference environments:</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>CY2026</th><th>CY2027</th><th>SculptForge</th></tr></thead><tbody><tr><td>Linux compiler</td><td>GCC 14.2</td><td>GCC 14.2</td><td>Built and tested with <code>gcc-toolset-14</code></td></tr><tr><td>glibc</td><td>2.28 (EL8)</td><td>2.34 (EL9)</td><td>Rocky Linux 8 and 9 builds; CI checks that no newer glibc symbols are used</td></tr><tr><td>C++</td><td>C++20</td><td>C++20</td><td>C++20</td></tr><tr><td>Python</td><td>3.13</td><td>3.13</td><td>The <code>sculptforge</code> module is built and tested against 3.13</td></tr><tr><td>Windows</td><td>VS 2022 17.6+</td><td>VS build tools 14.44+</td><td>Visual Studio 2022</td></tr><tr><td>macOS minimum</td><td>14.0</td><td>14.0</td><td>Universal binary with deployment target 11.0</td></tr><tr><td>FBX</td><td>2020.x</td><td>2020.x</td><td>Writes FBX 7.4 binary, which FBX SDK 2020 reads</td></tr></tbody></table></div>
+<p>SculptForge doesn&#x27;t depend on Qt, OpenEXR, Boost, TBB or other platform libraries, so it can&#x27;t conflict with the versions your other tools load. Its few dependencies (SDL3, Dear ImGui, GLM, ufbx) are linked into the binaries.</p>
+<p>Each release includes <code>SculptForge-&lt;version&gt;-linux-&lt;arch&gt;-vfx2026.tar.gz</code> (Rocky 8, glibc 2.28) and <code>...-vfx2027.tar.gz</code> (Rocky 9, glibc 2.34), for x86_64 and ARM64, with the Python module under <code>lib/sculptforge/python</code>.</p>
+<h2 id="deploy-with-rez">Deploy with Rez<a class="anchor" href="#deploy-with-rez" aria-label="Link to this section">#</a></h2>
+<p><code>packaging/rez/package.py</code> in the source tree builds and installs a Rez package:</p>
+<div class="code-block"><pre class="code"><code class="language-sh">cd packaging/rez
+SCULPTFORGE_PYTHON=$(which python3.13) rez-build --install     # or --release for your release repository
+rez-env sculptforge -- sculptforge                              # the app
+rez-env sculptforge -- sculptforge-cli --list                   # every pipeline command
+rez-env sculptforge python-3.13 -- python -c &quot;import sculptforge&quot;</code></pre><button class="copy" type="button" aria-label="Copy">Copy</button></div>
+<p>The package puts <code>bin/</code> on <code>PATH</code> and the Python module on <code>PYTHONPATH</code>, and sets <code>SCULPTFORGE_ROOT</code>. The Python module is built for the first <code>python3</code> found unless <code>SCULPTFORGE_PYTHON</code> names an interpreter.</p>
+<h2 id="studio-brush-libraries">Studio brush libraries<a class="anchor" href="#studio-brush-libraries" aria-label="Link to this section">#</a></h2>
+<p>Each artist&#x27;s own brushes live in their user brush library, one <code>.sfbrush</code> file per brush (see <a href="brush-lab.html">Brush Lab and sharing brushes</a>). To give a whole team the same brushes, put <code>.sfbrush</code> files on a share and list it in <code>SCULPTFORGE_BRUSH_PATH</code>:</p>
+<div class="code-block"><pre class="code"><code class="language-sh">export SCULPTFORGE_BRUSH_PATH=/studio/brushes:/show/troll/brushes    # &#x27;;&#x27; between folders on Windows
+sculptforge-cli -c &#x27;brush_library&#x27;      # every brush, where it comes from and its file, plus the folders</code></pre><button class="copy" type="button" aria-label="Copy">Copy</button></div>
+<ul>
+<li>
+The app, <code>sculptforge-cli</code> and the Python module load these folders at start-up, <strong>read-only</strong>: SculptForge never writes into them, so the share can be mounted read-only.
+</li>
+<li>
+Studio brushes show a <code>studio</code> tag in the Custom brushes list.
+</li>
+<li>
+When brushes share a name, the artist&#x27;s own wins over a studio one, which wins over a built-in. Among studio folders, the first one listed wins.
+</li>
+<li>
+Refining a studio brush in Brush Lab saves the artist&#x27;s own version (tagged <code>yours</code>) without touching the share. Deleting that version brings the studio brush back.
+</li>
+<li>
+To publish a brush, copy its <code>.sfbrush</code> file into the share: right-click it in the Custom brushes list &gt; <strong>Save .sfbrush...</strong>, or take it from an artist&#x27;s user library.
+</li>
+</ul>
+<p>With Rez, set the share once for everyone: when <code>SCULPTFORGE_STUDIO_BRUSHES</code> is set as the package resolves (in a site package, your rezconfig or the launcher), it is appended to <code>SCULPTFORGE_BRUSH_PATH</code>.</p>
+<div class="code-block"><pre class="code"><code class="language-sh">export SCULPTFORGE_STUDIO_BRUSHES=/studio/brushes
+rez-env sculptforge -- sculptforge</code></pre><button class="copy" type="button" aria-label="Copy">Copy</button></div>
+<h2 id="environment-variables">Environment variables<a class="anchor" href="#environment-variables" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Variable</th><th>Effect</th></tr></thead><tbody><tr><td><code>SF_AI</code></td><td><code>off</code>: every AI feature off and locked (app, <code>sculptforge-cli</code>, MCP, Python); <code>on</code>: on whatever was saved. <code>--no-ai</code> does the same as <code>off</code> for one start</td></tr><tr><td><code>SCULPTFORGE_BRUSH_PATH</code></td><td>Read-only studio brush folders (<code>:</code>-separated, <code>;</code> on Windows)</td></tr><tr><td><code>SCULPTFORGE_STUDIO_BRUSHES</code></td><td>With the Rez package: appended to <code>SCULPTFORGE_BRUSH_PATH</code></td></tr><tr><td><code>SCULPTFORGE_BRUSH_GALLERY</code></td><td>Use another community brush gallery index (a URL or a folder), for example an in-house mirror</td></tr><tr><td><code>HF_TOKEN</code> (or <code>HUGGING_FACE_HUB_TOKEN</code>)</td><td>Hugging Face token for the free image-to-3D models</td></tr><tr><td><code>FAL_KEY</code>, <code>MESHY_API_KEY</code></td><td>Keys for the paid generation services</td></tr><tr><td><code>ANTHROPIC_API_KEY</code>, <code>OPENAI_API_KEY</code></td><td>Keys for Brush Lab providers</td></tr><tr><td><code>XDG_DATA_HOME</code> (Linux), <code>APPDATA</code> (Windows)</td><td>Move the settings folder (see <a href="troubleshooting.html#where-settings-live">where settings live</a>)</td></tr></tbody></table></div>
+<p>Keys from the environment are used when none is saved in the app, so a launcher can supply them without writing them to each artist&#x27;s settings.</p>
+<h2 id="headless-and-farm-use">Headless and farm use<a class="anchor" href="#headless-and-farm-use" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>
+<code>sculptforge-cli</code> runs every editing operation without a display: imports, remeshing, decimation, LOD chains, FBX, USD and glTF export, splat conversion and AI generation. See <a href="scripting.html#sculptforge-cli">Scripting and automation</a>.
+</li>
+<li>
+<code>sculptforge --render out.png --turntable 8</code> renders review images and turntables offscreen. It needs an OpenGL 3.3 context; on a headless Linux node, run it under Xvfb.
+</li>
+<li>
+<code>sculptforge-cli --mcp</code> exposes the same operations to AI agents through the Model Context Protocol.
+</li>
+<li>
+<code>import sculptforge</code> gives Python the same commands plus NumPy arrays of the mesh, for your own tools.
+</li>
+</ul>
+<p>A typical farm job turns incoming scans into game-ready assets:</p>
+<div class="code-block"><pre class="code"><code class="language-sh">sculptforge-cli --set in=/ingest/scan_042.ply --set usd=/assets/scan_042.usda --set glb=/assets/scan_042.glb -c &#x27;
+  open path=$in
+  splat_transform rotate_x=180 fit=true
+  splat_clean
+  splat_to_mesh detail=320 preset=game color=texture
+  export_usd path=$usd
+  export_lods path=$glb levels=4 ratio=0.5
+&#x27;</code></pre><button class="copy" type="button" aria-label="Copy">Copy</button></div>
+<p>A <code>--set</code> variable replaces a whole value, so pass complete paths (with their extensions) as variables.</p>
+<h2 id="formats-in-a-pipeline">Formats in a pipeline<a class="anchor" href="#formats-in-a-pipeline" aria-label="Link to this section">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Format</th><th>Read</th><th>Write</th><th>Notes</th></tr></thead><tbody><tr><td>OpenUSD (<code>.usda</code>, <code>.usdz</code>)</td><td>Yes</td><td>Yes</td><td>Meshes, xform ops, Z-up stages, UsdSkel blend shapes, ParticleField Gaussian splats, textures; checked with OpenUSD&#x27;s validators</td></tr><tr><td>FBX</td><td>Yes (any version)</td><td>Yes (7.4 binary)</td><td>LOD groups, blend shapes, centimetre units, textures; checked with ufbx&#x27;s strict mode</td></tr><tr><td>glTF / GLB</td><td>Yes</td><td>Yes</td><td>Morph targets, vertex colours, <code>KHR_gaussian_splatting</code>, embedded textures; checked with the Khronos validator</td></tr><tr><td>OBJ</td><td>Yes</td><td>Yes</td><td>Objects as Parts, groups as face groups, vertex colours, textures through <code>.mtl</code></td></tr><tr><td>PLY</td><td>Yes</td><td>Yes</td><td>Meshes with vertex colours, Gaussian splats</td></tr><tr><td>STL</td><td>Yes (binary and ASCII)</td><td>Yes (binary)</td><td></td></tr><tr><td>Send to ZBrush (GoZ-compatible exchange)</td><td>Yes</td><td>Yes</td><td>Face Groups, mask, vertex paint, UVs</td></tr><tr><td>SculptForge project (<code>.sfproj</code>)</td><td>Yes</td><td>Yes</td><td>Everything; a documented ZIP of JSON and binary arrays</td></tr></tbody></table></div>
+<p>Binary <code>.usdc</code> files and USD references or payloads aren&#x27;t read yet; convert with <code>usdcat in.usd -o out.usda</code>. The project format is described in <code>docs/project-format.md</code> in the source tree, so pipeline tools can read it without SculptForge.</p>
+<h2 id="licensing">Licensing<a class="anchor" href="#licensing" aria-label="Link to this section">#</a></h2>
+<p>SculptForge is free software under the GNU General Public License, version 3 or later. In practice:</p>
+<ul>
+<li>
+<strong>Using it is unrestricted</strong>, commercially or otherwise, on any number of machines. There are no seats, licence servers or accounts.
+</li>
+<li>
+<strong>Your artwork belongs to you.</strong> The GPL covers the program, not the models you make with it.
+</li>
+<li>
+<strong>You can modify it in-house.</strong> The GPL only requires you to share source if you <em>distribute</em> the modified program outside your organisation. Internal use, including across your own facilities and farm, is generally not considered distribution. (This is the common reading of the GPL, not legal advice; check with your counsel.)
+</li>
+<li>
+SculptForge has no telemetry and no servers of its own. AI features are optional and talk only to the service each artist chooses, or to your own ComfyUI server.
+</li>
+</ul>
+<h2 id="studio-membership">Studio membership<a class="anchor" href="#studio-membership" aria-label="Link to this section">#</a></h2>
+<p>SculptForge is free for any number of artists, and nothing in the app is ever paywalled. A Studio membership ($300 a month; <strong>Founding Studio:</strong> the first 10 studios lock in $150 a month for as long as they stay subscribed) covers your whole company, with no seat count:</p>
+<ul>
+<li>
+<strong>Insider for every artist:</strong> the monthly pack, daily drops (a brush, alpha or VDM almost every day), the feature vote and the monthly dev Q&amp;A. Insiders will get each release about two weeks early, starting with SculptForge 1.0.
+</li>
+<li>
+<strong>A custom studio build</strong> with your presets, keymaps, packs, shelves and pipeline defaults baked in.
+</li>
+<li>
+<strong>Custom content:</strong> brushes, alphas, VDMs, macros and pipeline presets made for your team.
+</li>
+<li>
+<strong>Guided development:</strong> your requests go to the front of the roadmap, with a monthly call or async review with the developer.
+</li>
+<li>
+<strong>Priority triage:</strong> reviewed within 2 business days (no fix-time guarantee).
+</li>
+<li>
+A <strong>private team channel</strong> on Discord, and your <strong>logo</strong> on the website and in the README.
+</li>
+</ul>
+<p>Every release stays free for everyone; bug-fix and security releases go out to everyone the same day. Larger custom features are quoted separately. Join at <a href="https://sculptforge.app/studios.html#membership" rel="noopener">sculptforge.app/studios.html</a>.</p>
+<h2 id="studio-onboarding">Studio onboarding<a class="anchor" href="#studio-onboarding" aria-label="Link to this section">#</a></h2>
+<p>After checkout, email hello@sculptforge.app from a studio address with the GitHub usernames that should get the private repository (as many artists as you like) and who should join the team channel.</p>
+<h3 id="custom-content">Custom content<a class="anchor" href="#custom-content" aria-label="Link to this section">#</a></h3>
+<p>Studios can ask for their own content, made to order:</p>
+<ul>
+<li>
+<strong>Brushes</strong> tuned to your style.
+</li>
+<li>
+<strong>Alphas and VDMs</strong> made from your own references or scans (only material you own).
+</li>
+<li>
+<strong>Macros</strong> and one-click workflows.
+</li>
+<li>
+<strong>Pipeline presets:</strong> export settings, naming, scale, axis, texture packing and ZBrush Bridge setup.
+</li>
+<li>
+<strong>Keymaps and layouts.</strong>
+</li>
+</ul>
+<p>All of it is baked into your custom studio build. Up to 5 custom items a month (brushes, alphas, macros or presets); larger features are quoted separately. Your assets stay private to your studio and are never used for anything else.</p>
+<h3 id="requesting-a-custom-build">Requesting a custom build<a class="anchor" href="#requesting-a-custom-build" aria-label="Link to this section">#</a></h3>
+<p>Send, in one email or a message in your team channel:</p>
+<ul>
+<li>
+<strong>What to bake in:</strong> your exported keymap and layout (<strong>Edit &gt; Preferences &gt; Interface</strong>), brush presets and packs (<code>.sfbrush</code>, <code>.sfpack</code>), shelf setup, and the pipeline defaults you want (export format and preset, units and scale, up axis, naming pattern, texture packing, ZBrush Bridge folder).
+</li>
+<li>
+<strong>References for custom content:</strong> images or scans you own, with a line on what each item should do.
+</li>
+<li>
+<strong>Where it runs:</strong> platforms and, for Linux, the distribution or VFX Reference Platform year.
+</li>
+</ul>
+<p>Files are treated as data only: scripts and executables you send are never run. Your build is published as a release in the private repository, built by the same pipeline and tests as public builds, with its source (it is GPL like every SculptForge build). Each new release brings an updated studio build.</p>
+<h3 id="guided-development">Guided development<a class="anchor" href="#guided-development" aria-label="Link to this section">#</a></h3>
+<p>Tell us what your team needs most, in the team channel or on the monthly call (or an async review, if a call doesn&#x27;t suit your time zone). Studio requests go to the front of the roadmap: each month we agree what comes next, and you see it in preview builds about a week before the release. Requests that are bigger than a normal release&#x27;s work are quoted separately before anything starts.</p>
+<h2 id="not-yet">Not yet<a class="anchor" href="#not-yet" aria-label="Link to this section">#</a></h2>
+<p>Planned pipeline features, roughly in order: OpenColorIO viewport display, Alembic export, fuller USD authoring (layers, variants, references, <code>.usdc</code>), UVs and texture baking, multiresolution sculpting. Pipeline requests are welcome as issues on the project&#x27;s GitHub page.</p>
+<h2 id="see-also">See also<a class="anchor" href="#see-also" aria-label="Link to this section">#</a></h2>
+<ul>
+<li>
+<a href="scripting.html">Scripting and automation</a>
+</li>
+<li>
+<a href="exporting.html">Exporting, Send to Unreal and ZBrush</a>
+</li>
+<li>
+<a href="brush-lab.html">Brush Lab and sharing brushes</a>
+</li>
+<li>
+<a href="generate-3d.html">Image and text to 3D</a>: running models on your own ComfyUI server
+</li>
+<li>
+<a href="troubleshooting.html">Troubleshooting</a>
+</li>
+</ul>
+      </article>
+      <nav class="pager" aria-label="Previous and next chapter"><a class="prev" rel="prev" href="packs-and-macros.html"><span>Previous</span>Packs and macros</a><a class="next" rel="next" href="shortcuts.html"><span>Next</span>Keyboard and mouse</a></nav>
+      <p class="guide-meta fine">Also in the app: <strong>Help &gt; User Guide</strong> (<kbd>Shift</kbd>+<kbd>F1</kbd>).
+        Found a mistake? <a href="https://github.com/islandmed/SculptForge/edit/main/docs/guide/studios.md">Edit this page on GitHub</a>.</p>
+    </main>
+    <aside class="on-page" aria-label="On this page"><p>On this page</p><ul><li><a href="#vfx-reference-platform-builds">VFX Reference Platform builds</a></li><li><a href="#deploy-with-rez">Deploy with Rez</a></li><li><a href="#studio-brush-libraries">Studio brush libraries</a></li><li><a href="#environment-variables">Environment variables</a></li><li><a href="#headless-and-farm-use">Headless and farm use</a></li><li><a href="#formats-in-a-pipeline">Formats in a pipeline</a></li><li><a href="#licensing">Licensing</a></li><li><a href="#studio-membership">Studio membership</a></li><li><a href="#studio-onboarding">Studio onboarding</a></li><li><a href="#not-yet">Not yet</a></li><li><a href="#see-also">See also</a></li></ul></aside>
+  </div>
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="../index.html"><img src="../img/logo.svg?v=2" alt="" width="28" height="28"><span>SculptForge</span></a>
+        <p class="fine">Copyright © 2026 The SculptForge contributors.<br>The SculptForge User Guide is part of
+          SculptForge, licensed under the <a href="https://github.com/islandmed/SculptForge/blob/main/LICENSE">GNU GPL v3.0 or later</a>.</p>
+      </div>
+      <div class="links">
+        <a href="index.html">User guide</a>
+        <a href="../supporters.html">Supporters</a>
+        <a href="https://github.com/islandmed/SculptForge">Source code</a>
+        <a href="https://discord.gg/gWrYkEmQhH">Community Discord</a>
+        <a href="https://github.com/islandmed/SculptForge/issues">Report a problem</a>
+        <a href="https://github.com/islandmed/SculptForge/blob/main/docs/ai-services.md">AI services &amp; privacy</a>
+      </div>
+      <p class="fine trademarks">ZBrush, GoZ, MatCap and other ZBrush feature names are trademarks of Maxon Computer
+        GmbH. SculptForge is not affiliated with or endorsed by Maxon. All other trademarks belong to their owners.</p>
+    </div>
+  </footer>
+</body>
+</html>

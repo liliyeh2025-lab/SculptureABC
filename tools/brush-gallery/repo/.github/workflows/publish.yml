@@ -1,0 +1,60 @@
+# Rebuilds index.json (what the SculptForge app reads) after every change on
+# main, rendering any missing previews first, and commits it.
+name: Publish index
+
+on:
+  push:
+    branches: [main]
+    paths: ['brushes/**', 'previews/**', '.github/workflows/publish.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: gallery
+          fetch-depth: 0 # build_index.py dates new brushes from their first commit
+      - uses: actions/checkout@v4
+        with:
+          repository: islandmed/SculptForge
+          path: sculptforge
+      - name: Build SculptForge
+        working-directory: sculptforge
+        run: |
+          sudo ./packaging/linux/install-build-deps.sh
+          sudo apt-get install -y xvfb libgl1-mesa-dri
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSCULPTFORGE_USE_SYSTEM_SDL=OFF \
+                -DSCULPTFORGE_BUILD_TESTS=OFF -DSCULPTFORGE_BUILD_PYTHON=OFF
+          cmake --build build --target sculptforge sculptforge-cli --parallel
+      - name: Render missing previews
+        run: |
+          missing=()
+          for b in gallery/brushes/*.sfbrush; do
+            [ -f "gallery/previews/$(basename "$b" .sfbrush).png" ] || missing+=("$b")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            pip install pillow
+            xvfb-run -a -s "-screen 0 1280x1024x24" env LIBGL_ALWAYS_SOFTWARE=1 \
+              python3 sculptforge/tools/brush-gallery/render_previews.py "${missing[@]}" \
+                --out gallery/previews --app sculptforge/build/sculptforge
+          fi
+      - name: Build index.json
+        run: python3 sculptforge/tools/brush-gallery/build_index.py gallery --cli sculptforge/build/sculptforge-cli
+      - name: Commit
+        working-directory: gallery
+        run: |
+          git add index.json previews
+          if git diff --cached --quiet; then echo "index.json is up to date"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update index.json"
+          git push

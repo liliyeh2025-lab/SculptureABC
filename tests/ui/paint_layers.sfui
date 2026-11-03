@@ -1,0 +1,97 @@
+# Paint layers: a Photoshop-style stack of polypaint layers in Tool > Paint Layers. Base is the
+# polypaint; layers paint non-destructively with their own blend mode, opacity and visibility.
+run new_sphere subdivisions=5
+click "Paint Layers##tool.paint_layers"
+expect "Paint Layers/Base"
+expect_value paint_layers == 0
+expect_value active_paint_layer == -1
+
+# Base: a skin tone over the whole sphere (Fill layer fills the active layer).
+run set_color color=e0b090
+click "Paint Layers/Fill layer"
+expect_value colored == 1
+expect_value paint_layers == 0
+remember paint_mean_g skin_g
+shot base
+
+# Layer 1 (Normal): a band of red across the middle.
+click "Paint Layers/New"
+expect_value paint_layers == 1
+expect_value active_paint_layer == 0
+expect "Paint Layers/Layer 1"
+run set_color color=c81e1e
+key p
+stroke 0.1 0.5 0.9 0.5
+stroke 0.1 0.42 0.9 0.42
+stroke 0.1 0.58 0.9 0.58
+expect_value paint_mean_g < $skin_g
+remember paint_mean_r red_r
+shot red-band
+
+# Layer 2 (Multiply): a blue band down the middle; where it crosses the red it goes dark.
+click "Paint Layers/New"
+expect_value paint_layers == 2
+expect_value active_paint_layer == 1
+click "Paint Layers/##blend"
+click "Multiply"
+expect_text "Mult 100%"
+run set_color color=5080ff
+stroke 0.5 0.1 0.5 0.9
+stroke 0.42 0.1 0.42 0.9
+stroke 0.58 0.1 0.58 0.9
+expect_value paint_mean_r < $red_r
+remember paint_mean_r both_r
+shot multiply
+
+# Hiding Layer 1 brings the skin back under the red band; showing it again restores the look.
+click "Paint Layers/##eye Layer 1"
+expect_value paint_mean_r > $both_r
+shot layer1-hidden
+click "Paint Layers/##eye Layer 1"
+expect_value paint_mean_r == $both_r
+
+# Opacity: drag the slider down and the blue band fades (one undo step).
+drag_item "Paint Layers/##opacity" -35 0
+expect_value paint_mean_r > $both_r
+expect_status "Paint layer 'Layer 2'"
+shot opacity
+key ctrl+z
+expect_value paint_mean_r == $both_r
+key ctrl+shift+z
+expect_value paint_mean_r > $both_r
+
+# Non-destructive: clearing Layer 2 gives back exactly Base + Layer 1.
+click "Paint Layers/Clear layer"
+expect_value paint_mean_r == $red_r
+key ctrl+z
+expect_value paint_mean_r < $red_r
+
+# Ctrl-hover help on the controls.
+hold ctrl
+hover "Paint Layers/##blend"
+expect_help "Photoshop"
+hover "Paint Layers/Merge down"
+expect_help "Merge the active layer"
+hold none
+
+# Save and reopen: the stack comes back (the project's "paint_layers" key).
+run save_project path=sf_ui_paint_layers.sfproj
+run new_sphere subdivisions=2
+expect_value paint_layers == 0
+run open path=sf_ui_paint_layers.sfproj
+expect_value paint_layers == 2
+expect_value active_paint_layer == 1
+expect "Paint Layers/Layer 2"
+shot reopened
+
+# Merge down and flatten keep the look; undo brings the layers back.
+remember paint_mean_r look_r
+click "Paint Layers/Merge down"
+expect_value paint_layers == 1
+click "Paint Layers/Flatten"
+expect_value paint_layers == 0
+expect_value colored == 1
+shot flattened
+key ctrl+z
+key ctrl+z
+expect_value paint_layers == 2

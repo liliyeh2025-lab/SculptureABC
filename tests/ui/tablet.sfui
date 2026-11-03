@@ -1,0 +1,214 @@
+# Graphics tablet with a simulated pen (real SDL3 pen events plus the mouse events SDL synthesizes from them):
+# pressure, the global pressure curve, Pressure > Size, the eraser end, side buttons, leaving proximity
+# mid-stroke, and Preferences > Tablet.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+wait 0.2
+run new_sphere subdivisions=5
+snapshot
+
+# No pressure spike at the stroke start: the touch comes before its first pressure sample, and the
+# value before it (1.0 assumed at start-up, or stale from the last stroke) must not reach the first
+# dab. A short stroke, so one wrong dab would show.
+pen_stroke 0.4 0.45 0.45 0.45 0.2 0.2
+remember moved_out short
+key ctrl+z
+pen_pressure 1
+pen_stroke 0.4 0.45 0.45 0.45 0.2 0.2
+expect_value moved_out <= $short*1.01
+expect_value moved_out >= $short*0.99
+key ctrl+z
+pen_stroke 0.4 0.45 0.45 0.45 1 1
+expect_value moved_out > $short*2
+key ctrl+z
+
+# Light and heavy pressure: the heavy stroke pushes the surface out much further.
+pen_stroke 0.3 0.45 0.7 0.55 0.2 0.2
+expect_value moved_out > 0
+remember moved_out light
+remember moved light_area
+expect_value can_undo == 1
+key ctrl+z
+expect_value moved == 0
+pen_stroke 0.3 0.45 0.7 0.55 0.9 0.9
+expect_value moved_out > $light*3
+remember moved_out heavy
+key ctrl+z
+
+
+# The mouse always presses fully, whatever the pen did last.
+pen_out
+stroke 0.3 0.45 0.7 0.55
+expect_value brush_pressure == 1
+expect_value moved_out > $heavy
+key ctrl+z
+
+# Pressure > Size (top shelf): a light touch also makes the brush smaller.
+click "Pressure > Size"
+pen_stroke 0.3 0.45 0.7 0.55 0.2 0.2
+expect_value moved < $light_area*0.6
+key ctrl+z
+click "Pressure > Size"
+
+# The eraser end inverts the brush: the surface goes in.
+pen_stroke 0.3 0.45 0.7 0.55 0.6 0.6 eraser
+expect_value moved_out < 0
+shot eraser
+key ctrl+z
+
+# Upper side button = Alt (default): inverts while held.
+pen_button 2 down
+pen_stroke 0.3 0.45 0.7 0.55 0.6 0.6
+pen_button 2 up
+expect_value moved_out < 0
+key ctrl+z
+pen_stroke 0.3 0.45 0.7 0.55 0.6 0.6
+expect_value moved_out > 0
+key ctrl+z
+
+# Lower side button = right-click (default): drag to rotate. SDL's own synthesized click is ignored.
+pen_hover 0.5 0.5
+remember camera_yaw yaw
+pen_button 1 down
+pen_hover 0.9 0.5
+pen_button 1 up
+expect_value camera_yaw != $yaw
+expect_value moved == 0
+
+# Out of range mid-stroke: the stroke still ends cleanly, as one undo step.
+pen_stroke 0.3 0.45 0.7 0.55 0.6 0.6 leave
+expect_value stroking == 0
+expect_value moved_out > 0
+key ctrl+z
+expect_value moved == 0
+expect_value can_undo == 0
+
+# Preferences > Tablet: device, live pressure meter, draw-test area, curve editor, mappings.
+click "Preferences##palette.preferences"
+click "Tablet##preferences.tablet"
+expect_text Pressure curve (all brushes)
+expect "##Lower button"
+pen_drag_item "##tablet_test" 220 0 0.05 1.0 0.8
+pen_pressure 0.62
+expect_value pen_pressure == 0.62
+expect_text Pressure 0.62
+wait 0.1
+shot preferences-tablet
+
+# A firm global curve: the same light stroke now does much less.
+click "Firm##tablet_curve"
+wait 0.1
+shot curve-firm
+key escape
+pen_stroke 0.3 0.45 0.7 0.55 0.2 0.2
+expect_value moved_out < $light*0.5
+expect_value moved_out > 0
+key ctrl+z
+
+# Eraser mapped to Erase mask: the eraser removes mask instead of sculpting. (The pen is put away first: while it
+# is in range the UI, like the canvas, follows only the pen.)
+pen_out
+click "Preferences##palette.preferences"
+click "Linear##tablet_curve"
+click "##Eraser"
+click "Erase mask##Eraser"
+expect_text Erase mask
+key escape
+# (The mouse paints the mask: the pen leaves first, or its proximity would keep the mouse's moves out, and a
+# Ctrl+click that never moves blurs the mask instead of painting it.)
+pen_out
+hold ctrl
+stroke 0.2 0.5 0.8 0.5
+hold none
+expect_value masked > 50
+remember masked mask_before
+pen_stroke 0.2 0.5 0.8 0.5 1 1 eraser
+expect_value masked < $mask_before*0.5
+expect_value moved == 0
+
+# Stray mouse events beside the pen's (Windows Ink sends them, often at an old position) must not move
+# the brush ring: it used to flick between the two places, like a second brush blinking on the model.
+pen_hover 0.5 0.5
+remember cursor_x pen_x
+remember cursor_y pen_y
+mouse_move 0.1 0.9
+expect_value cursor_x == $pen_x
+expect_value cursor_y == $pen_y
+pen_hover 0.6 0.5
+expect_value cursor_x > $pen_x
+# Once the pen has left, the mouse moves the cursor again.
+pen_out
+mouse_move 0.1 0.9
+expect_value cursor_x < $pen_x
+
+# Mouse mode (#54, a tablet driver set to relative): the pen moves the cursor by how far it moves, like a mouse.
+# Lifting it and putting it down elsewhere on the tablet leaves the cursor where it was (it used to jump back to
+# where the pen is on the tablet); moving it again carries on from there.
+click "Preferences##palette.preferences"
+click "Mouse mode (relative)##tablet_mouse_mode"
+expect_value tablet_mouse_mode == 1
+key escape
+pen_hover 0.4 0.5
+remember cursor_x rel_x
+remember cursor_y rel_y
+pen_out
+pen_enter 0.85 0.2
+expect_value cursor_x >= $rel_x-0.5
+expect_value cursor_x <= $rel_x+0.5
+expect_value cursor_y >= $rel_y-0.5
+expect_value cursor_y <= $rel_y+0.5
+pen_hover 0.95 0.2
+expect_value cursor_x > $rel_x+5
+# A pen stroke in mouse mode sculpts at the cursor.
+snapshot
+pen_out
+pen_enter 0.85 0.2
+pen_stroke 0.85 0.2 0.9 0.2 0.8 0.8
+expect_value moved > 0
+key ctrl+z
+# The mouse moving the cursor in between: the pen carries on from where the mouse left it.
+pen_out
+mouse_move 0.2 0.7
+remember cursor_x mouse_x
+pen_enter 0.9 0.1
+expect_value cursor_x >= $mouse_x-0.5
+expect_value cursor_x <= $mouse_x+0.5
+# #72 (drag-d, driver in pen mode, 0.10.8: "no difference between default and mouse mode"): the pen reports its
+# place on the tablet, yet the cursor moves only by the pen's movement. The pen lifted and put down elsewhere: no
+# jump; it moves on from there, the panels see the pointer at the brush (ImGui floors it to whole pixels), and
+# they draw the arrow there (the system arrow, at the pen's place on the tablet, is hidden).
+pen_out
+pen_enter 0.3 0.6
+remember cursor_x a_x
+remember cursor_y a_y
+pen_hover 0.4 0.6
+expect_value cursor_x > $a_x+5
+remember cursor_x b_x
+remember cursor_y b_y
+pen_out
+pen_enter 0.9 0.15
+expect_value cursor_x >= $b_x-0.5
+expect_value cursor_x <= $b_x+0.5
+expect_value cursor_y >= $b_y-0.5
+expect_value cursor_y <= $b_y+0.5
+expect_value ui_mouse_x >= $b_x-1
+expect_value ui_mouse_x <= $b_x+0.5
+expect_value ui_mouse_y >= $b_y-1
+expect_value ui_mouse_y <= $b_y+0.5
+pen_hover 0.8 0.15
+expect_value cursor_x < $b_x-5
+expect_value cursor_y >= $b_y-1.5
+expect_value cursor_y <= $b_y+1.5
+wait 0.1
+expect_value soft_cursor == 1
+pen_out
+wait 0.1
+expect_value soft_cursor == 0
+# Pen mode again: the cursor is where the pen is.
+pen_out
+click "Preferences##palette.preferences"
+click "Mouse mode (relative)##tablet_mouse_mode"
+expect_value tablet_mouse_mode == 0
+key escape
+pen_enter 0.85 0.2
+expect_value cursor_x > $rel_x+5
+pen_out

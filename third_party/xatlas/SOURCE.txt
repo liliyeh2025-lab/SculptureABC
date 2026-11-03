@@ -1,0 +1,4 @@
+xatlas.h, xatlas.cpp, LICENSE from https://github.com/jpcy/xatlas commit f700c7790aaa030e794b52ba7791a05c085faf0c (source/xatlas; MIT)
+Local changes (marked "SculptForge:" in xatlas.cpp): planar regions must also be coplanar with their first face
+(neighbour-only tests chained whole dense, smooth meshes into one folded "planar" chart), and a chart without
+boundary vertices no longer crashes BoundingBox2D::compute.

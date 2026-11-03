@@ -1,0 +1,103 @@
+# Texture painting on UV maps (Tool > Texture Map): Auto UV unwraps the sculpt, New Texture gives it a 2K
+# texture, and the Paint brush then paints texels instead of vertices, with the same paint layers.
+run new_sphere subdivisions=4
+click "Texture Map##tool.texture"
+expect "Texture Map/Auto UV"
+expect_value uvs == 0
+expect_value texture_size == 0
+
+# Auto UV runs in the background; the status shows its progress.
+click "Texture Map/Auto UV"
+wait_idle 120
+expect_value uvs == 1
+expect_status "UV islands"
+click "Texture Map/Show UVs"
+shot uv-layout
+
+# A 2K texture (the default size): painting now goes into it.
+click "Texture Map/New Texture"
+expect_value texture_size == 2048
+expect_value paint_texture == 1
+expect_value texture_painted == 0
+expect "Texture Map/Texture"
+run set_color color=c81e1e
+key p
+stroke 0.15 0.5 0.85 0.5
+expect_value texture_painted > 5000
+expect_value colored == 0
+remember texture_painted stroke1
+shot stroke
+
+# One undo step per stroke, restored exactly; redo paints it again.
+key ctrl+z
+expect_value texture_painted == 0
+key ctrl+shift+z
+expect_value texture_painted == $stroke1
+
+# Paint layers work on the texture: a Multiply layer darkens where it crosses the red stroke.
+click "Paint Layers##tool.paint_layers"
+expect "Paint Layers/Base"
+click "Paint Layers/New"
+expect_value texture_layers == 1
+expect_value active_texture_layer == 0
+expect_value paint_layers == 0
+click "Paint Layers/##blend"
+click "Multiply"
+expect_text "Mult 100%"
+remember texture_mean_r before_r
+run set_color color=5080ff
+stroke 0.5 0.15 0.5 0.85
+expect_value texture_mean_r < $before_r
+remember texture_mean_r both_r
+shot multiply-layer
+
+# Hiding the layer brings the red back; showing it restores the look.
+click "Paint Layers/##eye Layer 1"
+expect_value texture_mean_r == $before_r
+click "Paint Layers/##eye Layer 1"
+expect_value texture_mean_r == $both_r
+
+# Opacity previews live and commits as one undo step.
+drag_item "Paint Layers/##opacity" -35 0
+expect_value texture_mean_r > $both_r
+key ctrl+z
+expect_value texture_mean_r == $both_r
+
+# The Vertex / Texture toggle sends the brush back to the vertices (polypaint).
+click "Paint Layers/Vertex"
+expect_value paint_texture == 0
+stroke 0.2 0.3 0.8 0.3
+expect_value colored == 1
+expect_value texture_mean_r == $both_r
+click "Paint Layers/Texture"
+expect_value paint_texture == 1
+shot both-targets
+
+# Ctrl-hover help on the new controls.
+click "Texture Map##tool.texture"
+hold ctrl
+hover "Texture Map/Auto UV"
+expect_help "UV islands"
+hover "Texture Map/New Texture"
+expect_help "texture"
+hover "Texture Map/##texsize"
+expect_help "8K"
+hold none
+
+# Save and reopen: the texture and its layers come back.
+run save_project path=sf_ui_texture_paint.sfproj
+run new_sphere subdivisions=2
+expect_value texture_size == 0
+run open path=sf_ui_texture_paint.sfproj
+expect_value texture_size == 2048
+expect_value texture_layers == 1
+expect_value texture_mean_r == $both_r
+shot reopened
+
+# Flatten bakes the layer into Base; Texture > Polypaint copies it to the vertices.
+click "Paint Layers##tool.paint_layers"
+click "Paint Layers/Flatten"
+expect_value texture_layers == 0
+expect_value texture_mean_r == $both_r
+run polypaint_from_texture
+expect_value colored == 1

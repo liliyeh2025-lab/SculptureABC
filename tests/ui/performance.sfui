@@ -1,0 +1,108 @@
+# Preferences > Performance: antialiasing, Fast Navigation (a big scene draws without antialiasing while the view
+# moves; the threshold is lowered here so a small sphere counts as big), multithreading, what the last stroke cost
+# per dab, and memory. Strokes give the same result with multithreading off.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+run new_sphere subdivisions=6
+click "Preferences##palette.preferences"
+click "Performance##preferences.performance"
+expect_text Antialiasing
+expect_text Sculpt a stroke to see what it costs
+expect_text Memory
+expect_value antialiasing == 4
+expect_value multithreading == 1
+
+# Ctrl-hover help on the new controls.
+hold ctrl
+hover "AA 4x##perf.aa_4"
+expect_help "samples per pixel"
+hover "Fast Navigation"
+expect_help "10 million triangles"
+hover "Multithreading##perf.mt"
+expect_help "every core"
+hover "Predictive Strokes"
+expect_help "exactly the same"
+hold none
+
+# Predictive Strokes: off by default (experimental), on and off again.
+expect_value predictive_strokes == 0
+click "Predictive Strokes"
+expect_value predictive_strokes == 1
+click "Predictive Strokes"
+expect_value predictive_strokes == 0
+expect_status "Predictive strokes off"
+
+# Antialiasing off and back; 8x.
+click "AA Off##perf.aa_1"
+expect_value antialiasing == 1
+expect_value view_samples == 1
+click "AA 8x##perf.aa_8"
+expect_value antialiasing == 8
+click "AA 4x##perf.aa_4"
+expect_value view_samples == 4
+key escape
+
+# A stroke: the panel shows its cost per dab.
+snapshot
+stroke 0.3 0.4 0.7 0.5
+expect_value last_stroke_dabs > 3
+remember moved_sum threaded
+click "Preferences##palette.preferences"
+expect_text dabs,
+expect_text Brush
+expect_text GPU upload
+shot performance-after-stroke
+key escape
+
+# Multithreading off: the same stroke moves the mesh the same way.
+key ctrl+z
+click "Preferences##palette.preferences"
+click "Multithreading##perf.mt"
+expect_value multithreading == 0
+expect_status "one thread"
+key escape
+stroke 0.3 0.4 0.7 0.5
+expect_value moved_sum == $threaded
+click "Preferences##palette.preferences"
+click "Multithreading##perf.mt"
+expect_value multithreading == 1
+shot performance-panel
+key escape
+
+# Fast Navigation: the "big" scene draws with one sample while the view turns, and 4x once it stops.
+env SF_FAST_NAVIGATION_TRIANGLES 10000
+orbit 120 0
+expect_value view_samples == 1
+wait 0.5
+expect_value view_samples == 4
+click "Preferences##palette.preferences"
+click "Fast Navigation"
+key escape
+orbit 120 0
+expect_value view_samples == 4
+click "Preferences##palette.preferences"
+click "Fast Navigation"
+key escape
+env SF_FAST_NAVIGATION_TRIANGLES 10000000
+
+# The settings are in the F3 command palette.
+key f3
+type "##Command palette" "fast navigation"
+expect_text Fast Navigation
+shot command-palette
+key escape
+
+# The guide's picture: the lion bust divided twice (750k triangles), a stroke, the panel.
+drop ../../assets/demo/lion-head.glb
+run subdiv_divide
+run subdiv_divide
+expect_value triangles > 700000
+key f
+hold alt
+orbit 300 0
+hold none
+stroke 0.35 0.3 0.65 0.35
+expect_value last_stroke_dabs > 3
+click "Preferences##palette.preferences"
+expect_text dabs,
+shot performance-lion
+key escape

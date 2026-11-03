@@ -1,0 +1,29 @@
+{
+  "name": "Wrinkle",
+  "description": "Fine, sharp creases for skin folds and fabric wrinkles.",
+  "direction": "normal",
+  "depth": -0.55,
+  "plane": "none",
+  "planeAmount": 0.5,
+  "pinch": 0.7,
+  "drag": 0,
+  "smooth": 0,
+  "hardness": 0.15,
+  "tipSharpness": 0.7,
+  "pattern": "none",
+  "patternScale": 0.3,
+  "patternAmount": 0,
+  "spacing": 0.06,
+  "jitter": 0,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "skin",
+    "fabric",
+    "crease"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

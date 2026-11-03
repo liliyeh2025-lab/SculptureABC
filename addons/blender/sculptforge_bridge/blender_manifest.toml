@@ -1,0 +1,17 @@
+schema_version = "1.0.0"
+
+id = "sculptforge_bridge"
+version = "0.7.0"
+name = "SculptForge Bridge"
+tagline = "Send meshes to SculptForge and back, updated in place"
+maintainer = "SculptForge contributors"
+type = "add-on"
+website = "https://sculptforge.app/guide/blender.html"
+tags = ["Import-Export", "Sculpt"]
+
+blender_version_min = "4.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+files = "Exchange meshes with SculptForge through a folder in your user data"

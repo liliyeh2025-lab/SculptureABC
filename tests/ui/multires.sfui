@@ -1,0 +1,142 @@
+# Subdivision levels (Tool > Geometry): Divide adds levels and keeps the lower ones, D / Shift+D and the SDiv
+# slider step between them, detail sculpted at the top survives sculpting big forms at a low level, and undo
+# steps back through strokes and level changes. A cube divided four times becomes a rounded box of quads.
+run new_sphere subdivisions=1
+run subtool_append type=cube name=Box
+run subtool_delete index=0
+expect_value subtools == 1
+expect_value triangles == 27648
+orbit 140 -70
+key f
+click "Geometry##tool.geometry"
+expect "Geometry/Divide"
+expect "Geometry/Smt"
+expect_value sdiv_levels == 0
+expect_text "No subdivision levels"
+
+# Reconstruct Subdiv finds the lower levels of a regular quad grid: 48 cells per side -> 24 -> 12 -> 6 -> 3.
+click "Geometry/Reconstruct Subdiv"
+expect_value sdiv_levels == 2
+expect_value sdiv == 1
+click "Geometry/Reconstruct Subdiv"
+click "Geometry/Reconstruct Subdiv"
+click "Geometry/Reconstruct Subdiv"
+expect_value sdiv_levels == 5
+expect_value triangles == 108
+expect_status "Reconstructed"
+# Close Geometry first: open, it is taller than the tray and Display's header would be out of reach.
+click "Geometry##tool.geometry"
+click "Display##tool.display"
+click "Wireframe##display"
+click "Geometry##tool.geometry"
+shot reconstructed-cage
+
+# Del Higher at the base leaves the plain 108-triangle cage to start from.
+click "Geometry/Del Higher"
+expect_value sdiv_levels == 0
+expect_value triangles == 108
+
+# Divide (Ctrl+D or the button): every level has four times the quads.
+click "Geometry/Divide"
+expect_value sdiv_levels == 2
+expect_value sdiv == 2
+expect_value triangles == 432
+key ctrl+d
+key ctrl+d
+key ctrl+d
+expect_value sdiv_levels == 5
+expect_value triangles == 27648
+expect_text "SDiv 5 / 5"
+expect_status "SDiv 5/5"
+shot divided-wire
+click "Geometry##tool.geometry"
+click "Display##tool.display"
+click "Wireframe##display"
+click "Geometry##tool.geometry"
+
+# Fine detail at the top level (B S T: Standard).
+key b
+key s
+key t
+snapshot
+stroke 0.25 0.35 0.75 0.4
+stroke 0.3 0.5 0.7 0.55
+expect_value moved > 200
+shot top-detail
+
+# Step down twice (Shift+D) and sculpt a big form: few vertices move.
+key shift+d
+key shift+d
+expect_value sdiv == 3
+expect_value triangles == 1728
+expect_text "SDiv 3 / 5"
+shot level-3
+snapshot
+key ]
+key ]
+key ]
+key ]
+key ]
+key ]
+key ]
+stroke 0.2 0.7 0.75 0.75 1.0
+key [
+key [
+key [
+key [
+key [
+key [
+key [
+expect_value moved > 3
+expect_value moved < 300
+shot level-3-form
+
+# Back up (D twice): the top level shows the big form with the fine detail on it.
+key d
+key d
+expect_value sdiv == 5
+expect_value triangles == 27648
+shot top-after-low-edit
+
+# Undo goes back through the steps and strokes in order: two steps, the low stroke, two steps, the detail.
+key ctrl+z
+expect_value sdiv == 4
+key ctrl+z
+expect_value sdiv == 3
+snapshot
+key ctrl+z
+expect_value moved > 3
+key ctrl+z
+key ctrl+z
+expect_value sdiv == 5
+snapshot
+key ctrl+z
+expect_value moved > 200
+expect_value sdiv == 5
+key ctrl+shift+z
+expect_value sdiv == 5
+
+# The SDiv slider: drag it to the left end for the base cage.
+drag_item "Geometry/##sdiv" -400 0
+expect_value sdiv == 1
+expect_value triangles == 108
+shot base-level
+
+# The SubTool list shows the level.
+click "Parts##tool.subtool"
+expect_text "SDiv 1/5"
+shot subtool-list
+
+# Del Lower at level 2 makes it the new base; Del Higher drops the top.
+click "Geometry##tool.geometry"
+key d
+click "Geometry/Del Lower"
+expect_value sdiv == 1
+expect_value sdiv_levels == 4
+expect_value triangles == 432
+click "Geometry/Higher Res"
+click "Geometry/Del Higher"
+expect_value sdiv_levels == 2
+key ctrl+z
+expect_value sdiv_levels == 4
+shot after-delete

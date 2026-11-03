@@ -1,0 +1,9 @@
+# SculptureABC - SPDX-License-Identifier: GPL-3.0-or-later
+# Cloudflare Pages response headers (copied into the site by mobile/tools/deploy-web.ps1).
+# COOP + COEP make the page cross-origin isolated (crossOriginIsolated == true): SharedArrayBuffer, so the
+# WebAssembly can run threads. Everything the page loads is same-origin, so require-corp blocks nothing.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: same-origin
+  X-Content-Type-Options: nosniff

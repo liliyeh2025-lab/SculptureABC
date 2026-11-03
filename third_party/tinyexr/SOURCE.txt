@@ -1,0 +1,3 @@
+tinyexr.h, exr_reader.hh, streamreader.hh and LICENSE from https://github.com/syoyo/tinyexr tag v1.0.13 (BSD 3-Clause; contains OpenEXR code
+under the OpenEXR BSD licence, reproduced in tinyexr.h). Unmodified. tinyexr_impl.cpp is ours: it builds the
+implementation with stb's zlib (TINYEXR_USE_STB_ZLIB) instead of miniz.

@@ -1,0 +1,3 @@
+# Brushes are checksummed in index.json: keep their exact bytes on every platform (no CRLF conversion).
+*.sfbrush -text
+index.json -text

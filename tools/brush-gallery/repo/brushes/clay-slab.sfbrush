@@ -1,0 +1,29 @@
+{
+  "name": "Clay Slab",
+  "description": "Builds up flat-topped strokes of clay for blocking in forms.",
+  "direction": "normal",
+  "depth": 0.3,
+  "plane": "clay",
+  "planeAmount": 0.7,
+  "pinch": 0,
+  "drag": 0,
+  "smooth": 0.1,
+  "hardness": 0.35,
+  "tipSharpness": 0,
+  "pattern": "none",
+  "patternScale": 0.3,
+  "patternAmount": 0,
+  "spacing": 0.15,
+  "jitter": 0,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "clay",
+    "blocking",
+    "forms"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

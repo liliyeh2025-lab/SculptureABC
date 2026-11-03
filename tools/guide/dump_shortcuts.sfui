@@ -1,0 +1,2 @@
+# Writes every default shortcut as Markdown (tools/guide/update_shortcuts.py runs this).
+dump_shortcuts shortcuts-table.md

@@ -1,0 +1,29 @@
+{
+  "name": "Palette Knife",
+  "description": "Flattens and drags clay sideways like a sculptor's knife.",
+  "direction": "normal",
+  "depth": 0,
+  "plane": "flatten",
+  "planeAmount": 0.8,
+  "pinch": 0,
+  "drag": 0.6,
+  "smooth": 0,
+  "hardness": 0.75,
+  "tipSharpness": 0,
+  "pattern": "none",
+  "patternScale": 0.3,
+  "patternAmount": 0,
+  "spacing": 0.1,
+  "jitter": 0,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "clay",
+    "planes",
+    "hard-surface"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

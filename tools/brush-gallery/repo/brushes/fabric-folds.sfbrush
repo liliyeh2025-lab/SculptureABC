@@ -1,0 +1,29 @@
+{
+  "name": "Fabric Folds",
+  "description": "Soft, rounded cloth folds with a crisp inner edge.",
+  "direction": "normal",
+  "depth": 0.55,
+  "plane": "none",
+  "planeAmount": 0.5,
+  "pinch": 0.45,
+  "drag": 0.15,
+  "smooth": 0.25,
+  "hardness": 0.1,
+  "tipSharpness": 0.25,
+  "pattern": "none",
+  "patternScale": 0.3,
+  "patternAmount": 0,
+  "spacing": 0.05,
+  "jitter": 0,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "fabric",
+    "clothing",
+    "folds"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

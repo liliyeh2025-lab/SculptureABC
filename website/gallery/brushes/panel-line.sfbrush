@@ -1,0 +1,29 @@
+{
+  "name": "Panel Line",
+  "description": "Clean, narrow grooves for hard-surface panel seams.",
+  "direction": "normal",
+  "depth": -0.6,
+  "plane": "none",
+  "planeAmount": 0.5,
+  "pinch": 0.35,
+  "drag": 0,
+  "smooth": 0,
+  "hardness": 0.3,
+  "tipSharpness": 1.0,
+  "pattern": "none",
+  "patternScale": 0.3,
+  "patternAmount": 0,
+  "spacing": 0.1,
+  "jitter": 0,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "hard-surface",
+    "mech",
+    "crease"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

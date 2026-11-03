@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SculptForge - the free, open-source ZBrush and Mudbox alternative for VFX, animation and games</title>
+  <meta name="description" content="SculptForge is a free, open-source alternative to ZBrush and Mudbox for VFX, animation and game studios: VFX Reference Platform CY2026 and CY2027 builds, OpenUSD, a Python API, Send to Unreal, Gaussian splats and free built-in AI (an AI brush creator and image or text to 3D), on Linux, macOS and Windows.">
+  <meta name="theme-color" content="#111114">
+  <meta name="color-scheme" content="dark">
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg?v=2">
+  <link rel="icon" type="image/png" href="img/favicon-64.png?v=2">
+  <link rel="apple-touch-icon" href="img/icon-256.png?v=2">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SculptForge - the free, open-source ZBrush and Mudbox alternative for VFX, animation and games">
+  <meta property="og:description" content="Sculpting for VFX, animation and games, with ZBrush-style keys available. VFX Reference Platform CY2026 and CY2027 builds, OpenUSD, a Python API and Send to Unreal. Free built-in AI: describe a brush and get it, or turn a sketch into a model.">
+  <meta property="og:image" content="https://sculptforge.app/img/social-preview.png?v=3">
+  <meta property="og:url" content="https://sculptforge.app/">
+  <link rel="canonical" href="https://sculptforge.app/">
+  <script type="application/ld+json">
+  {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "SculptForge", "url": "https://sculptforge.app/", "applicationCategory": "MultimediaApplication", "applicationSubCategory": "3D sculpting", "operatingSystem": "Windows 10, Windows 11, macOS, Linux", "softwareVersion": "0.10.9", "description": "Free, open-source digital sculpting: an alternative to ZBrush and Mudbox for VFX, animation and game studios.", "license": "https://www.gnu.org/licenses/gpl-3.0.html", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "downloadUrl": "https://github.com/islandmed/SculptForge/releases/latest", "image": "https://sculptforge.app/img/social-preview.png?v=3", "sameAs": ["https://github.com/islandmed/SculptForge"]}
+  </script>
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="style.css?v=19">
+  <script src="motion.js?v=11" defer></script>
+  <script data-goatcounter="https://sculptforge.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top"><img src="img/logo.svg?v=2" alt="" width="34" height="34"><span>SculptForge</span></a>
+      <nav aria-label="Main">
+        <a href="#whats-new">What's new</a>
+        <a href="#features">Features</a>
+        <a href="#demos">Demos</a>
+        <a href="#vfx">VFX &amp; Animation</a>
+        <a href="brushes.html">Brushes</a>
+        <a href="guide/index.html">Guide</a>
+        <a href="studios.html">Studios</a>
+        <a class="nav-support" href="support.html">Support</a>
+        <a class="nav-dl" href="#download">Download</a>
+        <a class="gh" href="https://discord.gg/gWrYkEmQhH">Discord</a>
+        <a class="gh" href="https://github.com/islandmed/SculptForge">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <a class="new-badge" href="#whats-new"><span>New in 0.10</span>
+            Quad Remesh 2, elastic Kelvinlet brushes, hundreds of millions of polygons →</a>
+          <p class="eyebrow">The free, open-source alternative to ZBrush and Mudbox</p>
+          <h1><span class="nowrap">Sculpt it.</span> <span class="nowrap">Forge it.</span><br><span class="accent">Ship it.</span></h1>
+          <p class="lede">Digital sculpting for <strong>VFX, animation and game studios</strong> on Linux, macOS and
+            Windows, with a ZBrush-style keymap (and Blender and Maya styles) for artists switching over, and no subscription. It
+            ships <strong>VFX Reference Platform</strong> builds, OpenUSD and a Python API for studio pipelines,
+            one-click game-ready LODs and Send to Unreal, plus <strong>free built-in AI</strong>: describe a brush and
+            Brush Lab builds it, or turn a sketch or a sentence into a model you can sculpt.</p>
+          <p class="lede-short">Sculpting for VFX, animation and games, with ZBrush-style keys available, VFX Reference Platform
+            builds, OpenUSD and Python, plus free built-in AI: an AI brush creator and sketch to 3D.</p>
+          <div class="ctas">
+            <a class="btn primary" href="#download">Download</a>
+            <a class="btn" href="#vfx"><span class="hide-sm">For </span>VFX &amp; animation</a>
+          </div>
+          <p class="first-sculpt"><a href="guide/first-sculpt.html">New to sculpting? Make your first sculpt in 10 minutes &rarr;</a></p>
+          <ul class="pills" aria-label="Highlights">
+            <li>VFX Reference Platform</li><li>Free built-in AI</li><li>No account</li><li>No telemetry</li><li>Windows · macOS · Linux</li>
+          </ul>
+        </div>
+        <figure class="hero-video">
+          <video id="hero-video" poster="media/poster-showcase.jpg?v=4" autoplay muted loop playsinline preload="metadata"
+                 aria-label="Weathering a detailed lion head and turning it to stone in SculptForge">
+            <source src="media/showcase-mobile.mp4?v=4" type="video/mp4" media="(max-width: 620px)">
+            <source src="media/showcase-4k.mp4?v=4" type="video/mp4" media="(min-width: 1600px) and (min-resolution: 1.5dppx), (min-width: 2600px)">
+            <source src="media/showcase.mp4?v=4" type="video/mp4">
+          </video>
+          <script>
+            if (matchMedia("(max-width: 620px)").matches)
+              document.getElementById("hero-video").poster = "media/poster-showcase-mobile.jpg?v=4";
+          </script>
+          <figcaption>Real recording of SculptForge, scripted demo rendered at 4K.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <a class="platform-strip" href="#vfx" aria-label="Built for VFX and animation: VFX Reference Platform support">
+      <div class="wrap strip-inner">
+        <span class="strip-label">Built for VFX &amp; animation</span>
+        <span class="strip-items">
+          <span class="key">VFX Reference Platform <b>CY2026</b> · <b>CY2027</b></span>
+          <span>Rocky Linux 8 &amp; 9</span>
+          <span>Python 3.13</span>
+          <span>OpenUSD</span>
+          <span>Rez</span>
+        </span>
+        <span class="strip-more">See how →</span>
+      </div>
+    </a>
+
+    <section id="whats-new" class="section alt">
+      <div class="wrap">
+        <h2>What's new in 0.10</h2>
+        <!-- whats-new:start (tools/guide/build_site.py writes this from docs/guide/whats-new.md: edit that) -->
+        <p class="section-lede">New in 0.10.9: Your first sculpt in ten minutes, starter meshes, brushes that keep their settings, and tablets that just work. <a href="guide/whats-new.html">Everything that changed</a> &middot; <a href="https://github.com/islandmed/SculptForge/blob/main/CHANGELOG.md">changelog</a></p>
+        <div class="wn-home">
+          <article class="wn-home-card"><a href="guide/whats-new.html#version-0109"><div class="wn-pic"><img src="guide/images/wn-first-sculpt.jpg" alt="" width="600" height="340" loading="lazy" decoding="async"></div><div class="wn-card-body"><h3>Your first sculpt in 10 minutes, Starter meshes, Tablets <small>new in 0.10.9</small></h3><p>Your first sculpt in ten minutes, starter meshes, brushes that keep their settings, and tablets that just work.</p><ul><li>Your first sculpt</li><li>Starter meshes</li><li>Brushes keep their settings</li><li>What&#x27;s New, redesigned</li></ul></div></a></article>
+          <article class="wn-home-card"><a href="guide/whats-new.html#version-0108"><div class="wn-pic wn-pic-mark"><img src="img/logo.svg?v=2" alt="" width="64" height="64"></div><div class="wn-card-body"><h3>Tablet mouse mode <small>new in 0.10.8</small></h3><p>Tablets in mouse mode follow the pen again.</p><ul><li>The brush follows the pen again on some Windows tablets (#72)</li></ul></div></a></article>
+          <article class="wn-home-card"><a href="guide/whats-new.html#version-0107"><div class="wn-pic"><img src="guide/images/wn-new-look.jpg" alt="" width="600" height="340" loading="lazy" decoding="async"></div><div class="wn-card-body"><h3>A new look, Memberships, Benchmark <small>new in 0.10.7</small></h3><p>A new look, clearer memberships, full alphas on every brush and a benchmark you can run.</p><ul><li>A new look</li><li>Clearer memberships</li><li>Full alphas, every brush</li><li>Native Wayland</li><li>Benchmark your machine</li></ul></div></a></article>
+        </div>
+        <div class="wn-home-groups">
+          <a class="wn-home-group" href="guide/whats-new.html#versions-0101-to-0106"><h3>0.10.1 to 0.10.6</h3><ul><li>PBR viewport</li><li>UV Editor</li><li>Keep Masked remeshing</li><li>Alternate smooth</li><li>Quad Remesh 2</li><li>Micro levels</li></ul><span>All changes &rarr;</span></a>
+          <a class="wn-home-group" href="guide/whats-new.html#versions-09x"><h3>0.9.x</h3><ul><li>Faster big brushes</li><li>Extract</li><li>Mirror And Weld</li><li>Forge Spheres</li><li>Blender keys</li><li>Scan to sculptable</li></ul><span>All changes &rarr;</span></a>
+          <a class="wn-home-group" href="guide/whats-new.html#versions-08-and-earlier"><h3>0.8 and earlier</h3><ul><li>Dynamic topology</li><li>Vector displacement brushes</li><li>Blender bridge</li><li>Half the memory</li><li>Subdivision levels</li><li>Map baking</li></ul><span>All changes &rarr;</span></a>
+        </div>
+        <!-- whats-new:end -->
+      </div>
+    </section>
+
+    <section id="features" class="section">
+      <div class="wrap">
+        <h2>Everything a sculptor needs, nothing in the way</h2>
+        <p class="section-lede">A focused sculpting app that starts instantly, works offline and fits straight into
+          VFX, animation and game pipelines.</p>
+        <div class="grid">
+          <article class="card">
+            <h3>Sculpt the way you already do</h3>
+            <p>Fourteen brushes including Clay Block, Sharp Crease, Tendril, Trim and Move, with alphas, Lazy
+              Stroke, symmetry, tablet pressure, ZBrush, Blender and Maya-style navigation, subdivision and voxel remesh.</p>
+          </article>
+          <article class="card">
+            <h3>Masking and face groups</h3>
+            <p>Hold Ctrl to paint a mask or drag a lasso or rectangle, mask by cavity, and grow, shrink or blur it.
+              Auto-group by angle or by piece, then Ctrl+Shift+click to isolate a group and work on just that part.</p>
+          </article>
+          <article class="card">
+            <h3>Parts</h3>
+            <p>Keep the body, eyes, teeth and armour as separate meshes. Append, split, merge and solo them, Alt+click
+              to pick one, and export each as its own object to glTF, FBX, USD or straight back to ZBrush.</p>
+          </article>
+          <article class="card">
+            <h3>Vertex paint, layers and lit spheres</h3>
+            <p>Paint colour straight onto the sculpt in layers with blend modes, tint the cavities, and judge forms
+              under the Sculpt, Red Wax, Clay, Skin, Bronze, Chrome or White materials.</p>
+          </article>
+          <article class="card" id="blender">
+            <h3>Works with Blender</h3>
+            <p>Keep Blender for the scene and sculpt here: the free add-on sends the selected objects to SculptForge
+              in one click, and one click sends them back into the same objects, with transforms, materials and
+              modifiers kept. <a href="https://github.com/islandmed/SculptForge/releases/latest/download/sculptforge_bridge.zip">Get
+              the add-on</a> · <a href="guide/blender.html">how it works</a></p>
+          </article>
+          <article class="card">
+            <h3>Works with ZBrush</h3>
+            <p>Open and save .GoZ files with face groups, masks, UVs and vertex paint, and send models to and from
+              ZBrush on Windows and macOS. Project files keep everything, with autosave and crash recovery.</p>
+          </article>
+          <article class="card">
+            <h3>Brush Lab: describe a brush</h3>
+            <p>"Dry cracked mud." "Overlapping dragon scales." An AI turns words into a brush you can tweak with
+              sliders. Share it with a brush code, a studio folder or the
+              <a href="brushes.html">community gallery</a>.</p>
+          </article>
+          <article class="card">
+            <h3>Generate 3D from an image or text</h3>
+            <p>Reconstruct a full, sculptable model from a sketch, a piece of concept art or a description, for
+              free through Hunyuan3D, TRELLIS.2 and Stable Fast 3D on Hugging Face, on your own ComfyUI, or with
+              fal.ai or Meshy.</p>
+          </article>
+          <article class="card">
+            <h3>Game &amp; animation ready</h3>
+            <p>Sculpt layers become blend shapes and morph targets, and a whole LOD chain is one click. Export FBX,
+              glTF, OpenUSD, OBJ and PLY, checked with the Khronos and OpenUSD validators.</p>
+          </article>
+          <article class="card">
+            <h3>Send to Unreal</h3>
+            <p>One click imports or updates your asset in a running Unreal Editor, on this computer or another
+              one on your network. Static meshes come with LODs, skeletal meshes with morph targets.</p>
+          </article>
+          <article class="card">
+            <h3>Gaussian splats</h3>
+            <p>Load phone captures as a sculpting reference, turn them into watertight meshes, or turn your
+              sculpt into splats. Supports PLY, .splat, glTF KHR_gaussian_splatting and OpenUSD.</p>
+          </article>
+          <article class="card">
+            <h3>Works with ComfyUI</h3>
+            <p>Run any ComfyUI workflow on your own GPU or studio server to generate models straight into
+              SculptForge, and use SculptForge's remesh, LOD and USD/FBX export nodes inside ComfyUI graphs.</p>
+          </article>
+          <article class="card">
+            <h3>Scriptable, and agent-ready</h3>
+            <p><code>sculptforge-cli</code> runs any operation headless for build farms. Its built-in MCP server
+              lets Claude Code, Claude Desktop or any MCP client sculpt, convert and export.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="vfx" class="section vfx">
+      <div class="wrap">
+        <p class="eyebrow" id="studios">VFX Reference Platform CY2026 · CY2027</p>
+        <h2>Built for VFX and animation pipelines</h2>
+        <p class="section-lede">SculptForge follows the VFX Reference Platform and is built and tested in its reference
+          environments on every commit. There's no licence server, no seats and no accounts, and every editor action
+          is scriptable from Python or the command line.</p>
+        <div class="specs">
+          <div class="spec"><strong>CY2026 · CY2027</strong><span>VFX Reference Platform builds in every release</span></div>
+          <div class="spec"><strong>Rocky Linux 8 &amp; 9</strong><span>glibc 2.28 / 2.34, verified in CI</span></div>
+          <div class="spec"><strong>GCC 14.2 · C++20</strong><span>gcc-toolset-14, as the platform specifies</span></div>
+          <div class="spec"><strong>Python 3.13</strong><span><code>import sculptforge</code> with NumPy mesh access</span></div>
+        </div>
+        <div class="vfx-grid">
+          <ul class="vfx-points">
+            <li><h3>OpenUSD in and out</h3>
+              <p>USDA and USDZ, with each Part as its own Mesh prim and sculpt layers as UsdSkel blend shapes.
+                Exports are checked with OpenUSD's <code>usdchecker</code>.</p></li>
+            <li><h3>Rez package</h3>
+              <p><code>rez-build --install</code> puts the app and CLI on <code>PATH</code> and the Python module on
+                <code>PYTHONPATH</code>.</p></li>
+            <li><h3>Headless and farm-ready</h3>
+              <p><code>sculptforge-cli</code> runs every operation without a display: remesh, decimate, LODs, USD, FBX
+                and glTF export. Turntables and review images render offscreen.</p></li>
+            <li><h3>No conflicts with your stack</h3>
+              <p>No Qt, Boost, TBB or OpenEXR to clash with the versions your other tools load. The few dependencies
+                are linked statically.</p></li>
+            <li><h3>Native Wayland on Linux</h3>
+              <p>No XWayland: a native Wayland window, sharp at any scale (fractional too), with pen pressure through the
+                Wayland tablet protocol. X11 works just as well.</p></li>
+            <li><h3>Nothing phones home</h3>
+              <p>No licence server, telemetry or account. It runs on air-gapped workstations and farm nodes.</p></li>
+            <li><h3>Make it yours</h3>
+              <p>GPL-3.0: fork it and wire it into your asset system. In-house changes can stay in-house; you only
+                share source if you distribute a modified version outside your organisation.</p></li>
+          </ul>
+          <div class="vfx-code">
+            <pre class="code"><code><span class="c"># Python 3.13, inside your pipeline</span>
+import sculptforge as sf
+
+doc = sf.Document()
+sf.run(doc, "open", path="/show/troll/troll_base.fbx")
+sf.run(doc, "remesh", resolution=320)
+sf.run(doc, "export_usd", path="/show/troll/troll_sculpt.usda")
+verts = doc.vertices            <span class="c"># NumPy (N, 3) float32</span></code></pre>
+            <pre class="code"><code><span class="c"># Deploy with Rez, run anywhere on the farm</span>
+rez-build --install
+rez-env sculptforge -- sculptforge-cli -c \
+  'open path=troll.fbx; export_lods path=troll.glb levels=4'
+rez-env sculptforge -- sculptforge troll.usda \
+  --render review.png --turntable 8</code></pre>
+            <div class="vfx-links">
+              <a class="btn primary" href="https://github.com/islandmed/SculptForge/blob/main/docs/studios.md">Read the studio guide</a>
+              <a class="btn" href="#download">VFX builds</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="demos" class="section alt">
+      <div class="wrap">
+        <h2>See it in action</h2>
+        <p class="section-lede">Every clip is a real, unedited recording of the app, made with its built-in demo
+          recorder. Waits for AI models are sped up and labelled on screen.</p>
+
+        <div class="demo">
+          <video aria-label="Brush Lab designing a dry cracked mud brush from a text prompt" src="media/brush-lab.mp4" poster="media/poster-brush-lab.jpg" muted loop playsinline preload="none" data-inview tabindex="0"></video>
+          <div>
+            <h3>Brush Lab: the AI brush creator</h3>
+            <p>Type "dry cracked mud", and AI designs the brush. Then ask for "deeper cracks, sharper edges". It's
+              free out of the box with no key. This clip uses a small open model running on the same machine, so
+              nothing leaves the computer.</p>
+          </div>
+        </div>
+
+        <div class="demo reverse">
+          <video aria-label="An owl knight concept sketch becoming a full 3D model, then sculpted" src="media/image-to-3d.mp4?v=1" poster="media/poster-image-to-3d.jpg?v=1" muted loop playsinline preload="none" data-inview tabindex="0"></video>
+          <div>
+            <h3>From a sketch to a sculptable model in about 20 seconds</h3>
+            <p>One concept sketch became a full 3D owl knight, with shields, belt and pouches, a back
+              and real depth. It was made with the free Hunyuan3D 2.1 model, then voxel-remeshed into one clean
+              surface ready to sculpt. The wait is sped up in the clip and labelled. You can also type a
+              description instead of using an image.</p>
+          </div>
+        </div>
+
+        <div class="demo">
+          <video aria-label="Sculpting a snarl on a lion as a blend shape, generating LODs and sending to Unreal" poster="media/poster-game-ready.jpg?v=4" muted loop playsinline preload="none" data-inview tabindex="0">
+            <source src="media/game-ready-4k.mp4?v=4" type="video/mp4" media="(min-width: 1600px) and (min-resolution: 1.5dppx), (min-width: 2600px)">
+            <source src="media/game-ready.mp4?v=4" type="video/mp4">
+          </video>
+          <div>
+            <h3>Blend shapes, LODs and Unreal</h3>
+            <p>Sculpt a snarl on its own layer and play it back. Generate a LOD chain in one click: even the
+              5,000-triangle level keeps the expression. Then send a skeletal mesh with LODs and morph targets
+              straight to Unreal Engine.</p>
+          </div>
+        </div>
+
+        <div class="demo reverse">
+          <video aria-label="Converting between a sculpt and Gaussian splats" poster="media/poster-splats.jpg?v=4" muted loop playsinline preload="none" data-inview tabindex="0">
+            <source src="media/splats-4k.mp4?v=4" type="video/mp4" media="(min-width: 1600px) and (min-resolution: 1.5dppx), (min-width: 2600px)">
+            <source src="media/splats.mp4?v=4" type="video/mp4">
+          </video>
+          <div>
+            <h3>Gaussian splats, both ways</h3>
+            <p>Turn a sculpt into Gaussian splats for web viewers and engines, and turn splat captures into
+              watertight meshes in under a second.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap two-col stack">
+        <div>
+          <h2>Free AI built in, or bring your own</h2>
+          <p>Two AI tools work out of the box at no cost and with no sign-up. Every AI feature is optional and talks
+            directly to the service you pick. SculptForge has no servers, no account and no telemetry.</p>
+          <p><strong>Your art is never uploaded or used for training. AI features run only when you use them and can be
+            turned off</strong> (Preferences &gt; AI).</p>
+          <ul class="checks">
+            <li><strong>Brush Lab, the AI brush creator:</strong> describe a brush ("dry cracked mud", "overlapping
+              dragon scales"), and AI builds it as a recipe with every value on a slider. Then refine it in plain
+              words. Free through an open model on Pollinations.ai, no key needed.</li>
+            <li><strong>Generate 3D:</strong> turn a sketch, concept art or a sentence into a full model you can sculpt,
+              free through Hunyuan3D, TRELLIS.2 and Stable Fast 3D on Hugging Face.</li>
+            <li><strong>Local models</strong> (Ollama, LM Studio) for brush design. They're free, private and
+              work offline. <a href="https://github.com/islandmed/SculptForge/blob/main/docs/local-ai.md">Set one up in five minutes</a> on Windows, macOS or Linux.</li>
+            <li><strong>Your own ComfyUI</strong> (local or a studio GPU server) runs any image or text to 3D workflow,
+              with ready-made Hunyuan3D 2.1 workflows included. <a href="https://github.com/islandmed/SculptForge/blob/main/docs/comfyui.md">ComfyUI guide</a>.</li>
+            <li><strong>Bring your own</strong> Claude, fal.ai or Meshy key when you want more speed or capacity.</li>
+          </ul>
+          <p class="fine">Each model has its own licence. For example, Tencent's Hunyuan3D isn't licensed for use
+            in the EU, UK or South Korea.
+            <a href="https://github.com/islandmed/SculptForge/blob/main/docs/ai-services.md">See the AI services and privacy guide</a>.</p>
+        </div>
+        <div>
+          <h2>How it compares</h2>
+          <div class="table-wrap">
+            <table class="compare">
+              <thead><tr><th></th><th>SculptForge</th><th>ZBrush</th><th>Mudbox</th><th>Blender</th><th>Nomad</th></tr></thead>
+              <tbody>
+                <tr><td>Price</td><td class="yes">Free</td><td>Subscription</td><td>Subscription (sales end Nov 2026)</td><td class="yes">Free</td><td>Paid</td></tr>
+                <tr><td>Built for sculpting</td><td class="yes">Yes</td><td>Yes</td><td>Yes</td><td>General 3D suite</td><td>Yes (mobile first)</td></tr>
+                <tr><td>Actively developed</td><td class="yes">Yes</td><td>Yes</td><td>No (being retired)</td><td class="yes">Yes</td><td>Yes</td></tr>
+                <tr><td>Open source</td><td class="yes">GPL</td><td>No</td><td>No</td><td class="yes">GPL</td><td>No</td></tr>
+                <tr><td>Native Linux</td><td class="yes">Yes</td><td>No</td><td>RHEL / Rocky</td><td class="yes">Yes</td><td>No</td></tr>
+                <tr><td>Send to Unreal</td><td class="yes">Built in</td><td>Plugin</td><td>No (FBX export)</td><td>Add-on</td><td>No</td></tr>
+                <tr><td>Image / text to 3D</td><td class="yes">Built in</td><td>No</td><td>No</td><td>Add-ons</td><td>No</td></tr>
+                <tr><td>Gaussian splats</td><td class="yes">Built in</td><td>No</td><td>No</td><td>Add-ons</td><td>No</td></tr>
+                <tr><td>AI agent control (MCP)</td><td class="yes">Built in</td><td>No</td><td>No</td><td>Add-ons</td><td>No</td></tr>
+                <tr><td>VFX Reference Platform builds</td><td class="yes">CY2026/27</td><td>No</td><td>Not stated</td><td class="yes">Yes</td><td>No</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="fine">Other products' columns: as of November 2026, from each product's public pages; <a href="https://github.com/islandmed/SculptForge/issues">tell us</a> if something changed.</p>
+          <p class="fine">SculptForge is young: UDIMs, Ptex and separate texture channels aren't there yet.
+          <a href="https://github.com/islandmed/SculptForge/blob/main/ROADMAP.md">See the roadmap</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="download" class="section alt">
+      <div class="wrap">
+        <h2>Download</h2>
+        <p class="section-lede">Version 0.10.9. All builds come from the
+          <a href="https://github.com/islandmed/SculptForge/releases/latest">latest GitHub release</a>, with
+          SHA-256 checksums. Free forever; <a href="support.html">memberships</a> add credits, a monthly brush pack and a roadmap vote.</p>
+        <div class="downloads">
+          <a class="dl" href="https://github.com/islandmed/SculptForge/releases/latest/download/SculptForge-windows-x86_64-setup.exe">
+            <strong>Windows</strong><span>10 / 11 · installer (.exe)</span></a>
+          <a class="dl" href="https://github.com/islandmed/SculptForge/releases/latest/download/SculptForge-macos.dmg">
+            <strong>macOS</strong><span>11+ · Apple Silicon &amp; Intel · .dmg</span></a>
+          <a class="dl" href="https://github.com/islandmed/SculptForge/releases/latest/download/sculptforge_amd64.deb">
+            <strong>Ubuntu / Debian</strong><span>.deb · x86_64 (ARM64: see all downloads)</span></a>
+          <a class="dl" href="https://github.com/islandmed/SculptForge/releases/latest/download/sculptforge.x86_64.rpm">
+            <strong>Fedora / RHEL 9+</strong><span>.rpm · x86_64 (ARM64: see all downloads)</span></a>
+          <a class="dl" href="https://github.com/islandmed/SculptForge/releases/latest/download/SculptForge-linux-x86_64.AppImage">
+            <strong>Any Linux</strong><span>AppImage · x86_64, runs anywhere</span></a>
+          <a class="dl" href="https://github.com/islandmed/SculptForge/releases/latest/download/sculptforge_bridge.zip">
+            <strong>Blender add-on</strong><span>Blender 4.2+ · send to SculptForge and back</span></a>
+          <a class="dl" href="https://github.com/islandmed/SculptForge/tree/main/packaging/arch">
+            <strong>Arch Linux</strong><span>PKGBUILD · <code>makepkg -si</code></span></a>
+          <a class="dl vfx-dl" href="https://github.com/islandmed/SculptForge/releases/latest">
+            <strong>VFX Reference Platform</strong><span>CY2026 (Rocky 8) &amp; CY2027 (Rocky 9) · .tar.gz with Python module</span></a>
+          <a class="dl" href="https://github.com/islandmed/SculptForge/blob/main/docs/studios.md#deploying-with-rez">
+            <strong>Rez</strong><span><code>packaging/rez</code> · build and install your own package</span></a>
+        </div>
+        <p class="fine">Each button downloads the newest version.
+          <a href="https://github.com/islandmed/SculptForge/tree/main/install#install-sculptforge">All downloads</a>
+          (ARM64, portable .zip, one-command install) · on macOS also
+          <code>brew install --cask islandmed/tap/sculptforge</code> ·
+          <a href="https://github.com/islandmed/SculptForge/releases">older versions</a>.</p>
+        <p class="fine">The builds aren't code-signed yet. On macOS, right-click the app and choose <em>Open</em>
+          the first time. On Windows, if SmartScreen appears, choose <em>More info → Run anyway</em>.
+          You can also <a href="https://github.com/islandmed/SculptForge#building">build from source</a>.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap faq">
+        <h2>Questions</h2>
+        <details><summary>Is it really free? Can I sell what I make?</summary>
+          <p>Yes. SculptForge is free under the GPL-3.0, and you own everything you sculpt with it. The GPL
+            covers the program's source code, not your models. If you use an AI model to generate a starting
+            point, that model's licence also applies (see the AI services guide).</p></details>
+        <details><summary>Do I need AI to use it?</summary>
+          <p>No. Sculpting, layers, LODs, remeshing, file formats and Send to Unreal all work offline with no AI
+            at all. The AI tools are extras you can switch to a local model or simply ignore.</p></details>
+        <details><summary>Which Unreal versions work with Send to Unreal?</summary>
+          <p>It targets Unreal Engine 5. It uses Unreal's built-in Python remote execution, so you only enable
+            the Python plugin and tick "Enable Remote Execution"; there's nothing to install in your project.
+            You can always export an Unreal-ready FBX instead.</p></details>
+        <details><summary>Can SculptForge replace ZBrush for me?</summary>
+          <p>For many sculpting and game-asset jobs, yes. Blocking out, sculpting forms and detail, blend shapes,
+            LODs and getting assets into Unreal, glTF or USD all work today, with familiar brushes and controls.
+            Masking, face groups and hide/show, vertex paint, lit spheres, project files and Send to ZBrush (GoZ-compatible exchange) exchange with ZBrush work
+            too, with a ZBrush-style keymap for ZBrush users. Subdivision levels, dynamic
+            topology, Quad Remesh retopology with guides, UVs and vector displacement brushes are in
+            too. It can't read ZBrush's .ZTL files directly: use Send to ZBrush, or convert your ZTools once with the free
+            SculptForge ZTL Export plug-in for ZBrush. It's an independent
+            project, not affiliated with or endorsed by Maxon.</p></details>
+        <details><summary>Mudbox is being retired. Can SculptForge replace it?</summary>
+          <p>For sculpting, largely yes. Autodesk ends new Mudbox subscription sales on 7 November 2026 and says it has had no
+            significant feature enhancements since Mudbox 2019 (<a href="https://www.autodesk.com/products/mudbox/overview">Autodesk's notice</a>). SculptForge is free, open source, actively developed
+            and runs natively on Windows, macOS and Linux (including RHEL and Rocky). It opens OBJ, FBX, glTF and
+            USD exported from Mudbox, and has layers, masking, vertex paint and Send to Unreal. It also has what
+            Mudbox users rely on: subdivision levels, sculpt layers, texture painting with paint layers and blend
+            modes, normal and displacement baking, and quad retopology. It doesn't have UDIMs, Ptex or separate
+            texture channels yet. <a href="mudbox-alternative.html">SculptForge for Mudbox users</a>. It's an independent project, not affiliated
+            with Autodesk.</p></details>
+        <details><summary>Does it fit a VFX studio pipeline?</summary>
+          <p>Yes. Every release includes VFX Reference Platform CY2026 and CY2027 builds (Rocky Linux 8 and 9, GCC
+            14.2, Python 3.13), there's a Rez package, and everything the app does can be scripted from Python or the
+            headless CLI. It reads and writes OpenUSD (USDA/USDZ), FBX and glTF. Binary <code>.usdc</code>, USD
+            references and OpenColorIO aren't supported yet. See the
+            <a href="https://github.com/islandmed/SculptForge/blob/main/docs/studios.md">studio guide</a>.</p></details>
+        <details><summary>How can I help?</summary>
+          <p>Try it, report bugs, share brushes, and send pull requests. See
+            <a href="https://github.com/islandmed/SculptForge/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="#top"><img src="img/logo.svg?v=2" alt="" width="28" height="28"><span>SculptForge</span></a>
+        <p class="fine">Copyright © 2026 The SculptForge contributors.<br>Licensed under the
+          <a href="https://github.com/islandmed/SculptForge/blob/main/LICENSE">GNU GPL v3.0 or later</a>.</p>
+      </div>
+      <div class="links">
+        <a href="guide/index.html">User guide</a>
+        <a href="zbrush-alternative.html">For ZBrush users</a>
+        <a href="mudbox-alternative.html">For Mudbox users</a>
+        <a href="zbrush-linux.html">Sculpting on Linux</a>
+        <a href="benchmarks/">Benchmarks: 15M and 33M</a>
+        <a href="https://github.com/islandmed/SculptForge">Source code</a>
+        <a href="https://discord.gg/gWrYkEmQhH">Community Discord</a>
+        <a href="support.html">Membership</a>
+        <a href="supporters.html">Supporters</a>
+        <a href="https://github.com/islandmed/SculptForge/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a>
+        <a href="https://github.com/islandmed/SculptForge/blob/main/docs/ai-services.md">AI services &amp; privacy</a>
+        <a href="https://github.com/islandmed/SculptForge/blob/main/SECURITY.md">Security</a>
+        <a href="https://github.com/islandmed/SculptForge/blob/main/CODE_OF_CONDUCT.md">Code of conduct</a>
+      </div>
+      <p class="fine trademarks">SculptForge is an independent project, not affiliated with or endorsed by Maxon,
+        Epic Games, Autodesk, Pixar, the Khronos Group, Hugging Face, Tencent, Microsoft, Stability AI,
+        Anthropic, fal or Meshy. ZBrush, GoZ, MatCap, FiberMesh, LightCap and other ZBrush feature names are trademarks of Maxon Computer GmbH. Unreal and Unreal Engine are trademarks of Epic
+        Games, Inc. FBX is a trademark of Autodesk, Inc. glTF is a trademark of the Khronos Group Inc. All other
+        trademarks belong to their owners. The site uses the Inter typeface (SIL Open Font License), self-hosted,
+        and no cookies. Visits and download clicks are counted anonymously with
+        <a href="https://www.goatcounter.com/">GoatCounter</a> (no cookies, no personal data).</p>
+    </div>
+  </footer>
+  <script>
+    // Demo clips play silently while on screen (tap, click or Enter/Space to pause).
+    (() => {
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const clips = document.querySelectorAll("video[data-inview]");
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          const v = e.target;
+          if (e.isIntersecting && !v.dataset.paused && !still) v.play().catch(() => {});
+          else v.pause();
+        }
+      }, { threshold: 0.5 });
+      for (const v of clips) {
+        io.observe(v);
+        const toggle = () => {
+          if (v.paused) { delete v.dataset.paused; v.play().catch(() => {}); }
+          else { v.dataset.paused = "1"; v.pause(); }
+        };
+        v.addEventListener("click", toggle);
+        v.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); } });
+        if (still) v.controls = true;
+      }
+      // Scroll reveals, transitions and the progress bar: motion.js.
+    })();
+  </script>
+</body>
+</html>

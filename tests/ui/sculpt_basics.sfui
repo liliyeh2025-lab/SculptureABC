@@ -1,0 +1,42 @@
+# Core loop on the real UI: sculpt, undo/redo, masking, polygroups, visibility.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+run new_sphere subdivisions=5
+expect_value can_undo == 0
+click "Clay##brush.clay"
+stroke 0.35 0.4 0.65 0.6
+expect_value can_undo == 1
+expect_value dirty == 1
+shot sculpted
+key ctrl+z
+expect_value can_undo == 0
+key ctrl+shift+z
+expect_value can_undo == 1
+
+# Ctrl paints the mask, the Tool palette's Masking buttons edit it.
+hold ctrl
+stroke 0.3 0.3 0.7 0.3
+hold none
+expect_value masked > 50
+click "Masking"
+click "Invert##mask"
+expect_value masked > 1000
+click "Clear##mask"
+expect_value masked == 0
+
+# Polygroups by normals on a cube-ish shape, then hide one with Ctrl+Shift+click.
+run new_sphere subdivisions=1
+click "Face Groups"
+click "By normals"
+expect_value groups > 1
+expect_value show_polygroups == 1    # grouping turns the colours on
+shot polygroups
+click "Show face groups"
+expect_value show_polygroups == 0
+click "Visibility"
+click "Show all"
+expect_value hidden == 0
+
+# Palettes open as drop-downs from the palette bar.
+click "Color##palette.color"
+expect "Vertex Paint & Materials/Paint brush (P)"
+expect "Vertex Paint & Materials/Fill masked"

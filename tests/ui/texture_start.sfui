@@ -1,0 +1,43 @@
+# Starting texture painting without hunting for Tool > Texture Map: with the Paint brush on, a SubTool without a
+# texture shows New Texture on the top shelf (and in the Color palette). Without UVs it runs Auto UV first, then
+# makes the texture, so the next stroke goes into texels.
+run new_sphere subdivisions=3
+expect_value uvs == 0
+expect_value texture_size == 0
+expect_not "New Texture##draw.new_texture"
+key p
+expect "New Texture##draw.new_texture"
+shot button
+
+# Ctrl-hover help explains it.
+hold ctrl
+hover "New Texture##draw.new_texture"
+expect_help "Auto UV"
+hold none
+
+click "New Texture##draw.new_texture"
+wait_idle 120
+expect_value uvs == 1
+expect_value texture_size == 2048
+expect_value paint_texture == 1
+expect_status "texture"
+expect_not "New Texture##draw.new_texture"
+expect "Texture##draw.paint_texture"
+run set_color color=red
+stroke 0.2 0.5 0.8 0.5
+expect_value texture_painted > 1000
+expect_value colored == 0
+shot started
+
+# A model that already has UVs gets the texture straight away; Rgb (sculpting with colour) shows the button too.
+run new_sphere subdivisions=2
+run uv_auto
+key p
+expect_not "New Texture##draw.new_texture"
+click "Rgb##draw.rgb"
+expect "New Texture##draw.new_texture"
+click "New Texture##draw.new_texture"
+expect_value texture_size == 2048
+expect_value paint_texture == 1
+expect_not "New Texture##draw.new_texture"
+shot rgb-started

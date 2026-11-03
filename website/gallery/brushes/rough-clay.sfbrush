@@ -1,0 +1,29 @@
+{
+  "name": "Rough Clay",
+  "description": "Lumpy, hand-pressed clay for a traditional sculpted look.",
+  "direction": "normal",
+  "depth": 0.4,
+  "plane": "clay",
+  "planeAmount": 0.4,
+  "pinch": 0,
+  "drag": 0,
+  "smooth": 0,
+  "hardness": 0.4,
+  "tipSharpness": 0,
+  "pattern": "noise",
+  "patternScale": 0.45,
+  "patternAmount": 0.75,
+  "spacing": 0.2,
+  "jitter": 0.4,
+  "pressureCurve": 1,
+  "frontFacesOnly": false,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "clay",
+    "blocking",
+    "texture"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

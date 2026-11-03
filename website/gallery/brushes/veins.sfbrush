@@ -1,0 +1,29 @@
+{
+  "name": "Veins",
+  "description": "Soft raised veins and tendons under the skin.",
+  "direction": "normal",
+  "depth": 0.45,
+  "plane": "none",
+  "planeAmount": 0.5,
+  "pinch": 0.3,
+  "drag": 0,
+  "smooth": 0.35,
+  "hardness": 0.1,
+  "tipSharpness": 0.8,
+  "pattern": "none",
+  "patternScale": 0.3,
+  "patternAmount": 0,
+  "spacing": 0.05,
+  "jitter": 0,
+  "pressureCurve": 1,
+  "frontFacesOnly": true,
+  "cavityMask": 0,
+  "author": "SculptForge",
+  "tags": [
+    "skin",
+    "anatomy",
+    "character"
+  ],
+  "format": "sfbrush",
+  "version": 1
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- SculptureABC - SPDX-License-Identifier: GPL-3.0-or-later -->
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebAssembly speed check</title>
+<style>
+  body { font: 18px/1.4 -apple-system, system-ui, sans-serif; margin: 16px; background: #222; color: #eee; }
+  table { border-collapse: collapse; margin-top: 12px; }
+  td, th { border: 1px solid #555; padding: 6px 10px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  #ua { font-size: 13px; color: #aaa; word-break: break-all; }
+</style>
+</head>
+<body>
+<h2>WebAssembly speed check</h2>
+<p>Each row: the same loops (40M float steps / 40M integer steps), run 4 times; times in ms (1st / best).</p>
+<div id="status">running...</div>
+<table id="t"><tr><th>build</th><th>float 1st</th><th>float best</th><th>int 1st</th><th>int best</th></tr></table>
+<p id="ua"></p>
+<script>
+const N = 4000000;
+const variants = [
+  ['base', 'plain -O3'],
+  ['simd', '-msimd128'],
+  ['eh', '-fwasm-exceptions'],
+  ['mem2g', 'memory growth, 2GB max'],
+  ['mem4g', 'memory growth, 4GB max'],
+  ['app', 'like the app: simd + exceptions + 4GB'],
+];
+const table = document.getElementById('t');
+document.getElementById('ua').textContent = navigator.userAgent;
+
+function row(name, f, i) {
+  const tr = table.insertRow();
+  const cells = [name, f[0], Math.min(...f), i[0], Math.min(...i)];
+  for (const c of cells) tr.insertCell().textContent = typeof c === 'number' ? c.toFixed(1) : c;
+}
+function time(fn) {
+  const out = [];
+  for (let k = 0; k < 4; ++k) { const t0 = performance.now(); fn(); out.push(performance.now() - t0); }
+  return out;
+}
+function loadScript(src) {
+  return new Promise((ok, bad) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+}
+const tick = () => new Promise(r => setTimeout(r, 50));
+
+(async () => {
+  // Plain JavaScript first: if this is slow too, the browser runs without its JIT (e.g. Lockdown Mode).
+  const a = new Float32Array(N);
+  for (let i = 0; i < N; ++i) a[i] = (i & 1023) * 0.001;
+  row('JavaScript', time(() => { let s = 0; for (let r = 0; r < 10; ++r) for (let i = 0; i < N; ++i) { a[i] = a[i] * 0.9999 + 0.5; s += a[i]; } return s; }),
+      time(() => { let x = 2463534242 >>> 0, c = 0; for (let i = 0; i < N * 10; ++i) { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; if (x & 1) ++c; } return c; }));
+  await tick();
+  for (const [name, desc] of variants) {
+    try {
+      await loadScript(name + '.js');
+      const m = await window['make_' + name]();
+      row(name + ' (' + desc + ')', time(() => m._runFloat(N)), time(() => m._runInt(N)));
+    } catch (e) {
+      const tr = table.insertRow(); tr.insertCell().textContent = name; tr.insertCell().textContent = 'failed: ' + e;
+    }
+    await tick();
+  }
+  document.getElementById('status').textContent = 'done';
+})();
+</script>
+</body>
+</html>

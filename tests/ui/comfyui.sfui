@@ -1,0 +1,31 @@
+# Generate 3D with ComfyUI: pick the service, test a server that isn't there (the error must be
+# readable and wrapped inside the panel), and see the workflow picker in both tabs.
+drop ../../assets/demo/teddy-sketch.png
+wait_for "Generate 3D" 5
+click "Generate 3D/##service"
+click "ComfyUI - your server"
+expect "Generate 3D/Server"
+expect "Generate 3D/Test connection"
+expect "Generate 3D/Workflow"
+expect_text Export (API)
+shot comfyui-panel
+
+# Nothing listens on port 9.
+type "Generate 3D/Server" http://127.0.0.1:9
+click "Generate 3D/Test connection"
+wait_idle 15
+expect_text Nothing is answering at http://127.0.0.1:9
+expect_no_text Connected:
+shot comfyui-dead-server
+
+click "Generate 3D/Workflow"
+expect_text Other file (API format)...
+shot comfyui-workflows
+click "Generate 3D/Workflow"
+expect_no_text Other file (API format)...
+
+click "Generate 3D/From text"
+wait 0.2
+expect "Generate 3D/Workflow"
+expect_text sf_prompt
+shot comfyui-text

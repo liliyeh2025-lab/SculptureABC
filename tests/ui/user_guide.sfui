@@ -1,0 +1,57 @@
+# Help > User Guide: the embedded docs/guide reader. Open it from the Help palette, move between chapters,
+# search, follow a link, go back, and open a chapter from the Ctrl-hover help with F1.
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+run new_sphere subdivisions=3
+click "Help##palette.help"
+click "User Guide##help.guide"
+expect_value guide_open == 1
+expect_guide index.md
+expect_text SculptForge User Guide
+shot contents
+
+# The contents on the left open chapters; the open chapter lists its sections.
+click "User Guide/Masking##guide.toc.masking.md"
+expect_guide masking.md
+expect "User Guide/Paint a mask##guide.sec.paint-a-mask"
+click "User Guide/Face Groups and visibility##guide.toc.face-groups.md"
+expect_guide face-groups.md
+shot chapter
+
+# Search finds a term across chapters; a result opens its chapter.
+type "User Guide/##guide_search" "voxel remesh"
+expect_value guide_hits > 0
+expect_text Voxel remesh
+shot search
+click "User Guide/##guide.hit.0"
+expect_guide geometry.md
+click "User Guide/##guide_search"
+key escape
+expect_value guide_hits == 0
+
+# Links between chapters jump; Alt+Left / Alt+Right (back / forward) retrace them.
+click "User Guide/Contents##guide.toc.index"
+expect_guide index.md
+click "User Guide/Keyboard and mouse"
+expect_guide shortcuts.md
+key alt+left
+expect_guide index.md
+key alt+right
+expect_guide shortcuts.md
+
+# Shift+F1 closes and reopens it where it was.
+key shift+f1
+expect_value guide_open == 0
+key shift+f1
+expect_value guide_open == 1
+expect_guide shortcuts.md
+key shift+f1
+
+# Ctrl-hover help names the chapter; F1 (Ctrl still held) opens it.
+click "Tool/Geometry"
+hold ctrl
+hover "Subdivide"
+expect_help Learn more: Subdivide, remesh, decimate and LODs
+key f1
+hold none
+expect_value guide_open == 1
+expect_guide geometry.md

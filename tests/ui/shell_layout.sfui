@@ -1,0 +1,123 @@
+# The ZBrush-style shell (docs/ui-design.md §2-3): the canvas framed by shelves, the alphabetical palette bar,
+# palettes in drop-downs and trays, the tray dividers, Tab and the layout presets. CMake also runs this script
+# at 1920x1080 (ui_shell_layout_1080).
+run ui_look look=classic layout=zbrush        # written for the Classic look and the ZBrush-style palette bar and shelves
+run new_sphere subdivisions=4
+expect "SubTools/Append"            # right tray: the Tool palette with its SubTool sub-palette open
+expect_value right_tray == 1
+expect_value left_tray == -1
+expect "Clay##brush.clay"           # bottom shelf: quick brushes
+expect "Wire##view.polyf"          # right shelf
+expect "##tile.brush"               # left shelf
+expect "##drawsize"                 # top shelf
+expect_not "Brush Lab/Create"       # floating windows stay closed: nothing covers the model
+shot standard
+
+# Shelf buttons act and show their state.
+click "Clay##brush.clay"
+stroke 0.35 0.4 0.65 0.6
+expect_value can_undo == 1
+click "Wire##view.polyf"
+expect_value wireframe == 1
+click "Wire##view.polyf"
+expect_value wireframe == 0
+click "Groups##view.polygroups"
+expect_value show_polygroups == 1
+click "Groups##view.polygroups"
+
+# Tab hides the shelves and trays; the palette bar stays.
+key tab
+expect_value shelves == 0
+expect_not "Clay##brush.clay"
+expect_not "SubTools/Append"
+expect "Tool##palette.tool"
+shot no-shelves
+key tab
+expect "Clay##brush.clay"
+expect "SubTools/Append"
+
+# The divider opens and closes the right tray.
+click "##rightdivider"
+expect_not "SubTools/Append"
+expect_value right_tray == -1
+shot tray-closed
+click "##rightdivider"
+expect "SubTools/Append"
+
+# A palette opens as a drop-down from the bar; its icon puts it in the tray, and back.
+click "Stroke##palette.stroke"
+expect "Stroke/Drag Stamp"
+shot dropdown
+# Clicking another name switches drop-downs; Escape closes them.
+click "Draw##palette.draw"
+expect "Draw/Add"
+expect_not "Stroke/Drag Stamp"
+key escape
+expect_not "Draw/Add"
+click "Stroke##palette.stroke"
+click "Stroke/##totray"
+expect "Stroke/Drag Stamp"
+expect "SubTools/Append"
+expect_value right_tray == 2
+shot palette-in-tray
+click "Stroke/##totray"
+expect_not "Stroke/Drag Stamp"
+expect_value right_tray == 1
+# Shift+click sends it to the left tray, which opens.
+hold shift
+click "Alpha##palette.alpha"
+click "Alpha/##totray"
+hold none
+expect "Alpha/Load image..."
+expect_value left_tray == 1
+expect_value right_tray == 1
+shot left-tray
+
+# Tool sub-palettes: one open at a time.
+click "Tool/Geometry"
+expect "Subdivide"
+expect_not "SubTools/Append"
+click "Subdivide"
+expect_value triangles == 20480
+click "Tool/Parts"
+expect "SubTools/Append"
+
+# Bottom shelf: remove a brush with its menu, add it back with [+].
+right_click "Clay##brush.clay"
+click "Remove from shelf"
+expect_not "Clay##brush.clay"
+click "##addbrush"
+click "Clay"
+expect "Clay##brush.clay"
+# Its tile size from the same menu (also Preferences > Interface > Shelf tiles).
+right_click "Clay##brush.clay"
+hover "Tile size"
+wait 0.2
+expect "Small"
+click "Large"
+expect "Clay##brush.clay"
+right_click "Clay##brush.clay"
+hover "Tile size"
+wait 0.2
+click "Medium"
+
+# Layout presets (title strip 1 2 3).
+click "2##ui.preset.2"
+expect_value left_tray == -1
+expect_value right_tray == -1
+expect_not "SubTools/Append"
+expect_not "Alpha/Load image..."
+shot preset-sculpt
+click "3##ui.preset.3"
+expect_value left_tray == 3
+expect_value right_tray == 2
+expect "Stroke/Drag Stamp"
+expect "Material/Studio"
+shot preset-wide
+click "1##ui.preset.1"
+expect "SubTools/Append"
+expect_not "Stroke/Drag Stamp"
+
+# Window controls: minimise and close sit at the far right of the title strip.
+expect "Minimize##window"
+expect "Close##window"
