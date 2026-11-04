@@ -6,6 +6,10 @@
 A digital sculpting web app for tablets (iPad / Android) with a Traditional Chinese interface: C++ compiled to
 WebAssembly with Emscripten, drawn with WebGL2. The same code also builds for Windows.
 
+<p align="center">
+  <img src="preview.webp" alt="SculptureABC 預覽 / Preview" width="720">
+</p>
+
 ## 來源與授權 · Credits and license
 
 SculptureABC 以 [SculptForge](https://github.com/islandmed/SculptForge)（GPL-3.0-or-later）為基礎：
