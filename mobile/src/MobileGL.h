@@ -27,7 +27,7 @@ constexpr GLenum GL_BACK = 0x0405;
     X(void, GenBuffers, GLsizei, GLuint*)                                                    \
     X(void, DeleteBuffers, GLsizei, const GLuint*)                                           \
     X(void, BindBuffer, GLenum, GLuint)                                                      \
-    X(void, BufferData, GLenum, GLsizeiptr, const void*, GLenum)                             \
+    X(void, BufferData, GLenum, GLsizeiptr, const void*, GLenum)                                 X(void, BufferSubData, GLenum, GLintptr, GLsizeiptr, const void*)                            X(void, BlendFunc, GLenum, GLenum)                                                       \
     X(void, GenVertexArrays, GLsizei, GLuint*)                                               \
     X(void, DeleteVertexArrays, GLsizei, const GLuint*)                                      \
     X(void, BindVertexArray, GLuint)                                                         \

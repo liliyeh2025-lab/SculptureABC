@@ -69,6 +69,13 @@ bool runningAsApp();
 bool isFullscreen();
 void toggleFullscreen(const char* message, const char* okLabel, const char* cancelLabel);
 
+// --- A line of text (a layer's or a Part's name) ---
+// Web: a box over the page with a text field, which brings up the tablet's keyboard; the answer comes later through
+// takeText. Returns false where the shell has to ask itself (Windows: an ImGui text field).
+bool askText(const char* title, const std::string& current, const char* okLabel, const char* cancelLabel);
+// The answer once there is one: true, with `ok` false when it was cancelled.
+bool takeText(std::string& text, bool& ok);
+
 // --- Settings (small text, such as the brush settings) ---
 // Web: the site's localStorage (each address keeps its own); Windows: a file in the app-data folder.
 // "" when nothing was saved under `name`.

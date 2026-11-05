@@ -7,8 +7,13 @@
 #include "SculptView.h"
 #include "ViewportInput.h"
 
+#include "core/BrushAlpha.h"
+#include "core/EnvironmentMath.h"
+#include "core/Matcap.h"
+#include "core/Polypaint.h"
 #include "core/Precision.h"
 #include "core/Sculpt.h"
+#include "render/GL.h"
 #include "render/Renderer.h"
 
 #include <IconsLucide.h>
@@ -68,7 +73,59 @@ const char* const kUsedIcons = ICON_LC_BALLOON ICON_LC_BOX ICON_LC_CIRCLE ICON_L
     ICON_LC_CONTRAST ICON_LC_LASSO ICON_LC_SQUARE_DASHED ICON_LC_FLIP_VERTICAL ICON_LC_ERASER ICON_LC_DROPLET
     ICON_LC_MAXIMIZE_2 ICON_LC_MINIMIZE_2 ICON_LC_SQUARE
     // Settings
-    ICON_LC_MAXIMIZE ICON_LC_MINIMIZE;
+    ICON_LC_MAXIMIZE ICON_LC_MINIMIZE
+    // the face group and hiding tools, their panel
+    ICON_LC_LASSO_SELECT ICON_LC_BOX_SELECT ICON_LC_SHAPES ICON_LC_MOUSE_POINTER_CLICK ICON_LC_EYE_OFF ICON_LC_EYE
+    ICON_LC_EYE_CLOSED ICON_LC_PALETTE ICON_LC_WAND ICON_LC_BOXES ICON_LC_COMBINE
+    // the Parts panel, the Gizmo
+    ICON_LC_BLOCKS ICON_LC_CYLINDER ICON_LC_TORUS ICON_LC_COPY ICON_LC_TRASH_2 ICON_LC_ARROW_UP ICON_LC_ARROW_DOWN
+    ICON_LC_MERGE ICON_LC_SPLIT ICON_LC_UNGROUP ICON_LC_SCAN_EYE ICON_LC_MOVE_3D
+    // the Layers panel
+    ICON_LC_LAYERS_3 ICON_LC_PLUS
+    // the Topology panel
+    ICON_LC_NETWORK ICON_LC_GRID_2X2_PLUS ICON_LC_CHEVRON_UP ICON_LC_CHEVRON_DOWN ICON_LC_CHEVRONS_UP ICON_LC_CHEVRONS_DOWN
+    ICON_LC_REFRESH_CW ICON_LC_TRIANGLE
+    // stroke modes, Stamp, Erase Layer, Cut Polyline, renaming
+    ICON_LC_STAMP ICON_LC_PENCIL_RULER ICON_LC_MINUS ICON_LC_MOUSE_POINTER_2 ICON_LC_SPRAY_CAN ICON_LC_ELLIPSIS
+    ICON_LC_CHECK ICON_LC_X ICON_LC_PENCIL
+    // painting, materials
+    ICON_LC_BRUSH ICON_LC_PIPETTE ICON_LC_PAINT_BUCKET ICON_LC_SWATCH_BOOK ICON_LC_SUN ICON_LC_SPARKLE;
+
+// What each built-in alpha is for (the pickers' line under the grid).
+const char* alphaWhat(const std::string& name) {
+    static const struct {
+        const char* name;
+        const char* what;
+    } kWhat[] = {
+        {"Round", "The plain round brush."},
+        {"Square", "A square with soft edges: flat planes and hard corners."},
+        {"Noise", "Uneven noise: rough, organic surfaces."},
+        {"Pores", "Skin pores of mixed sizes (use with Invert to press them in)."},
+        {"Cracks", "A web of thin cracks: dry earth, old paint, stone."},
+        {"Scales", "Overlapping scales in rows: reptiles and fish."},
+        {"Rivets", "A grid of round rivet heads: armour and machines."},
+        {"Stitches", "A seam with cross stitches: draw along the seam."},
+        {"Fabric Weave", "Threads woven over and under: cloth."},
+        {"Bark", "Rough ridges and furrows: tree bark."},
+        {"Rock Strata", "Stepped layers of rock: cliffs and stone."},
+        {"Wrinkles", "Fine parallel lines: skin round eyes and knuckles."},
+        {"Skin Folds", "Soft, broad folds: bellies, elbows, brows."},
+        {"Hair Strands", "Long flowing strands: hair, fur, feathers."},
+        {"Dot Grid", "An even grid of soft dots: studs and patterns."},
+    };
+    for (const auto& w : kWhat)
+        if (name == w.name) return w.what;
+    return "";
+}
+
+int alphaIndex(const std::string& name) {
+    const auto& all = sf::BrushAlpha::builtins();
+    for (size_t i = 0; i < all.size(); ++i)
+        if (all[i].name == name) return int(i);
+    return 0;
+}
+
+constexpr GLenum kGlRepeat = 0x2901, kGlTextureBinding2D = 0x8069;
 
 bool mouseHover() { return ImGui::GetIO().MouseSource == ImGuiMouseSource_Mouse && ImGui::IsItemHovered(); }
 
@@ -244,11 +301,18 @@ void Shell::openPanel(const std::string& name) {
     if (name == "brushes") panel_ = Panel::Brushes;
     if (name == "brush") panel_ = Panel::BrushSettings;
     if (name == "mask") panel_ = Panel::Mask;
+    if (name == "groups") panel_ = Panel::Groups;
+    if (name == "parts") panel_ = Panel::Parts;
+    if (name == "layers") panel_ = Panel::Layers;
+    if (name == "topology") panel_ = Panel::Topology;
+    if (name == "color") panel_ = Panel::Color;
+    if (name == "material") panel_ = Panel::Material;
 }
 
 void Shell::selectTool(ShellContext& c, int tool) {
     if (c.view.stroking() || tool < 0 || tool >= toolCount()) return;
     c.view.tool = tool;
+    c.view.polyClear();
     curveDrag_ = curveSelected_ = -1;
 }
 
@@ -263,6 +327,11 @@ bool Shell::hits(float x, float y) const {
 void Shell::draw(ShellContext& c) {
     building_.clear();
     sizePreview_ = false;
+    if (c.view.notice == "missed") c.notify(T("The cut missed the model."));
+    if (c.view.notice == "picked") c.notify(T("Picked the colour."));
+    if (c.view.notice == "nolayer") c.notify(T("Erase Layer works on a sculpt layer: pick one in the Layers panel."));
+    c.view.notice.clear();
+    c.view.settings.showPolygroups = showGroups_ || c.view.toolDef().group == ToolGroup::Hide;
     topBar(c);
     leftBar(c);
     rightBar(c);
@@ -274,11 +343,20 @@ void Shell::draw(ShellContext& c) {
     case Panel::Brushes: brushesPanel(c); break;
     case Panel::BrushSettings: brushSettingsPanel(c); break;
     case Panel::Mask: maskPanel(c); break;
+    case Panel::Groups: groupsPanel(c); break;
+    case Panel::Parts: partsPanel(c); break;
+    case Panel::Layers: layersPanel(c); break;
+    case Panel::Topology: topologyPanel(c); break;
+    case Panel::Color: colorPanel(c); break;
+    case Panel::Material: materialPanel(c); break;
     case Panel::None: break;
     }
     if (showProbe) {
         c.probe.draw(c.info);
     }
+    gizmoBar(c);
+    polyBar(c);
+    renameBox(c);
     brushCircle(c);
     rects_.swap(building_);
 }
@@ -293,6 +371,13 @@ void Shell::topBar(ShellContext& c) {
     const float h = kBarH - 12.0f;
     fileButtonX_ = ImGui::GetCursorScreenPos().x;
     if (wideButton("file", ICON_LC_MENU, T("File"), 0.0f, h, panel_ == Panel::File)) togglePanel(Panel::File);
+    ImGui::SameLine();
+    topologyButtonX_ = ImGui::GetCursorScreenPos().x;
+    if (wideButton("topology", ICON_LC_NETWORK, T("Topology"), 0.0f, h, panel_ == Panel::Topology || c.view.dyntopo().enabled))
+        togglePanel(Panel::Topology);
+    ImGui::SameLine();
+    materialButtonX_ = ImGui::GetCursorScreenPos().x;
+    if (wideButton("material", ICON_LC_SPARKLE, T("Material"), 0.0f, h, panel_ == Panel::Material)) togglePanel(Panel::Material);
 
     // The middle: the model's size (and the timings when asked for), or the last error.
     {
@@ -318,6 +403,15 @@ void Shell::topBar(ShellContext& c) {
 
     const float uiSize = ui_->FontSize / density_;
     const float settingsW = 24.0f + uiSize + 8.0f + ui_->CalcTextSizeA(uiSize, FLT_MAX, 0.0f, T("Settings")).x;
+    // Full screen, next to Settings: one tap back in after the iPad's swipe down left it.
+    if (files::fullscreenAvailable()) {
+        const bool full = files::isFullscreen();
+        const char* label = full ? T("Leave full screen") : T("Full screen");
+        const float fullW = 24.0f + uiSize + 8.0f + ui_->CalcTextSizeA(uiSize, FLT_MAX, 0.0f, label).x;
+        ImGui::SameLine(vp->WorkSize.x - settingsW - fullW - 12.0f);
+        if (wideButton("fullscreentop", full ? ICON_LC_MINIMIZE : ICON_LC_MAXIMIZE, label, fullW, h))
+            files::toggleFullscreen(T("Full screen"), T("Full screen"), T("Cancel"));
+    }
     ImGui::SameLine(vp->WorkSize.x - settingsW - 6.0f);
     settingsButtonX_ = ImGui::GetCursorScreenPos().x;
     if (wideButton("settings", ICON_LC_SETTINGS, T("Settings"), settingsW, h, panel_ == Panel::Settings))
@@ -331,7 +425,7 @@ void Shell::leftBar(ShellContext& c) {
     SculptView& v = c.view;
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     // Two tall sliders share what the buttons leave of the height.
-    const float free = vp->WorkSize.y - kBarH - kBrushH - 4.0f * (kTile + kGap) - 120.0f;
+    const float free = vp->WorkSize.y - kBarH - kBrushH - 5.0f * (kTile + kGap) - 120.0f;
     const float sliderH = std::clamp(free * 0.5f, 90.0f, 260.0f);
     const float sliderW = kStripW - 28.0f;
     ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + kGap, vp->WorkPos.y + kBarH + kGap));
@@ -383,10 +477,22 @@ void Shell::leftBar(ShellContext& c) {
     ImGui::Dummy(ImVec2(0.0f, 4.0f));
     if (tile("undo", ICON_LC_UNDO_2, T("Undo"), inner, kTile, false, v.canUndo())) v.undo();
     if (tile("redo", ICON_LC_REDO_2, T("Redo"), inner, kTile, false, v.canRedo())) v.redo();
-    if (tile("invert", ICON_LC_CIRCLE_MINUS, v.toolDef().mask ? T("Erase") : T("Invert"), inner, kTile, v.invert))
+    const char* invertName = v.toolDef().invertName ? T(v.toolDef().invertName) : v.toolDef().mask ? T("Erase") : T("Invert");
+    if (tile("invert", ICON_LC_CIRCLE_MINUS, invertName, inner, kTile, v.invert))
         v.invert = !v.invert;
     if (tile("brushsettings", ICON_LC_SLIDERS_HORIZONTAL, T("Brush"), inner, kTile, panel_ == Panel::BrushSettings))
         togglePanel(Panel::BrushSettings);
+    { // The paint colour: a swatch with its name under it; it opens the Color panel.
+        const bool open = panel_ == Panel::Color;
+        if (tile("color", "", T("Color"), inner, kTile, open)) togglePanel(Panel::Color);
+        const ImVec2 a = ImGui::GetItemRectMin(), bb = ImGui::GetItemRectMax();
+        const glm::vec3 col = v.paintColor();
+        const float s = 22.0f, cx = (a.x + bb.x) * 0.5f, cy = a.y + 8.0f + s * 0.5f;
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        dl->AddRectFilled(ImVec2(cx - s * 0.5f, cy - s * 0.5f), ImVec2(cx + s * 0.5f, cy + s * 0.5f),
+                          ImGui::ColorConvertFloat4ToU32(ImVec4(col.x, col.y, col.z, 1.0f)), 5.0f);
+        dl->AddRect(ImVec2(cx - s * 0.5f, cy - s * 0.5f), ImVec2(cx + s * 0.5f, cy + s * 0.5f), IM_COL32(255, 255, 255, 140), 5.0f);
+    }
     remember();
     ImGui::End();
 }
@@ -402,6 +508,12 @@ void Shell::rightBar(ShellContext& c) {
     if (tile("wire", ICON_LC_GRID_3X3, T("Wireframe"), inner, kTile, v.settings.wireframe))
         v.settings.wireframe = !v.settings.wireframe;
     if (tile("mask", ICON_LC_CONTRAST, T("Mask"), inner, kTile, panel_ == Panel::Mask || v.toolDef().mask)) togglePanel(Panel::Mask);
+    if (tile("groups", ICON_LC_EYE_OFF, T("Hide"), inner, kTile, panel_ == Panel::Groups || v.toolDef().group == ToolGroup::Hide))
+        togglePanel(Panel::Groups);
+    if (tile("parts", ICON_LC_BLOCKS, T("Parts"), inner, kTile, panel_ == Panel::Parts || v.toolDef().drive == Drive::Gizmo))
+        togglePanel(Panel::Parts);
+    if (tile("layers", ICON_LC_LAYERS_3, T("Layers"), inner, kTile, panel_ == Panel::Layers || v.activeLayer() >= 0))
+        togglePanel(Panel::Layers);
     if (tile("view", ICON_LC_ROTATE_3D, T("View"), inner, kTile, panel_ == Panel::View)) togglePanel(Panel::View);
     if (tile("frame", ICON_LC_FOCUS, T("Reset view"), inner, kTile)) v.resetView();
     remember();
@@ -484,6 +596,20 @@ void Shell::filePanel(ShellContext& c) {
     if (wideButton("sphere", ICON_LC_CIRCLE, T("New sphere"), w, h)) ask(Replace::Sphere);
     if (wideButton("lion", ICON_LC_SPARKLES, T("Lion head (sample)"), w, h)) ask(Replace::Lion);
     if (wideButton("import", ICON_LC_FOLDER_OPEN, T("Open a file..."), w, h)) ask(Replace::Import);
+    // Starter models (base meshes with subdivision levels): two to a row.
+    ImGui::TextColored(ImColor(kDim), "%s", T("Start from"));
+    {
+        const std::vector<SculptView::StarterInfo> starters = v.starters();
+        for (int i = 0; i < int(starters.size()); ++i) {
+            if (i % 2) ImGui::SameLine();
+            ImGui::PushID(i);
+            if (wideButton("starter", nullptr, T(starters[size_t(i)].name.c_str()), half, 40.0f)) {
+                starter_ = i;
+                ask(Replace::Starter);
+            }
+            ImGui::PopID();
+        }
+    }
     if (wideButton("subdiv", ICON_LC_GRID_3X3, T("Subdivide (4x the triangles)"), w, h)) {
         c.status.clear();
         if (!v.subdivide(c.status)) SDL_Log("subdivide: %s", c.status.c_str());
@@ -534,6 +660,9 @@ void Shell::replaceModel(ShellContext& c, Replace what) {
         break;
     case Replace::Import:
         files::pickFile(T("Open a model or project file"), T("Choose a file"), T("Cancel"));
+        break;
+    case Replace::Starter:
+        if (!v.newStarter(starter_, c.status)) SDL_Log("starter: %s", c.status.c_str());
         break;
     case Replace::None: break;
     }
@@ -822,8 +951,30 @@ void Shell::brushSettingsPanel(ShellContext& c) {
     dimText(T(d.what));
     ImGui::Separator();
 
-    const bool shapeTool = d.drive == Drive::Lasso || d.drive == Drive::Rect;
-    if (shapeTool) {
+    const bool shapeTool = d.drive == Drive::Lasso || d.drive == Drive::Rect || d.drive == Drive::Line;
+    if (d.shape == Shape::Cut && !d.mask) {
+        // What the cut does: away through the Part, a pocket in, or the shape added out; how deep / tall.
+        struct Mode {
+            SculptView::CutMode mode;
+            const char* label;
+        };
+        static const Mode modes[] = {{SculptView::CutMode::Away, "Cut away"}, {SculptView::CutMode::In, "Dig in"},
+                                     {SculptView::CutMode::Add, "Add on"}};
+        const float third = (inner - 2.0f * ImGui::GetStyle().ItemSpacing.x) / 3.0f;
+        for (int i = 0; i < 3; ++i) {
+            if (i) ImGui::SameLine();
+            if (wideButton(modes[i].label, nullptr, T(modes[i].label), third, 40.0f, v.cutMode == modes[i].mode)) v.cutMode = modes[i].mode;
+        }
+        if (v.cutMode != SculptView::CutMode::Away) {
+            float depth = v.cutDepth * 100.0f;
+            label(v.cutMode == SculptView::CutMode::In ? T("Depth") : T("Height"));
+            if (ImGui::SliderFloat("##cutdepth", &depth, 1.0f, 50.0f, "%.0f%%")) v.cutDepth = depth / 100.0f;
+            dimText(T("A share of the Part's size."));
+        }
+        dimText(T("Cuts go straight through along the view, mirrored with Mirror on. Undo brings the piece back."));
+    } else if (!d.mask && (shapeTool || d.drive == Drive::Pick || d.drive == Drive::Gizmo)) {
+        // (The face group and hiding tools have nothing to set.)
+    } else if (shapeTool) {
         // Mask Lasso / Rectangle: how much mask, and which side.
         float strength = b.strength * 100.0f;
         label(T("Strength"));
@@ -836,11 +987,15 @@ void Shell::brushSettingsPanel(ShellContext& c) {
     label(T("Edge"));
     if (ImGui::SliderFloat("##edge", &edge, -1.0f, 1.0f, edge < -0.05f ? T("hard") : edge > 0.05f ? T("soft") : T("normal")))
         b.focal = std::abs(edge) < 0.04f ? 0.0f : edge;
-    if (d.drive == Drive::Dabs || d.drive == Drive::Pull) {
+    const bool oneStamp = toolTakesStroke(d) && (b.stroke == StrokeMode::DragDot || b.stroke == StrokeMode::DragRect) &&
+                          toolTakesStrokeMode(d, b.stroke);
+    if ((d.drive == Drive::Dabs || d.drive == Drive::Pull) && !oneStamp) {
         float spacing = b.spacing * 100.0f;
         label(T("Spacing"));
         if (ImGui::SliderFloat("##spacing", &spacing, 5.0f, 100.0f, "%.0f%%")) b.spacing = spacing / 100.0f;
     }
+    if (toolTakesStroke(d)) strokeSection(d, b, inner);
+    if (toolTakesAlpha(d)) alphaSection(b, inner);
 
     // Pen pressure and its curve.
     ImGui::Separator();
@@ -873,7 +1028,7 @@ void Shell::brushSettingsPanel(ShellContext& c) {
 
     // The stroke.
     ImGui::Separator();
-    if (d.drive != Drive::Turn) {
+    if (d.drive != Drive::Turn && !oneStamp && !(toolTakesStroke(d) && b.stroke == StrokeMode::Line)) {
         ImGui::Checkbox(T("Steady stroke"), &b.steady);
         dimText(T("The brush trails the pen on a string: smooth, even lines."));
         if (b.steady) {
@@ -901,6 +1056,98 @@ void Shell::brushSettingsPanel(ShellContext& c) {
     ImGui::End();
 }
 
+void Shell::strokeSection(const ToolDef& d, BrushPrefs& b, float inner) {
+    ImGui::Separator();
+    ImGui::TextColored(ImColor(kDim), "%s", T("Stroke"));
+    const float spacing = ImGui::GetStyle().ItemSpacing.x;
+    const int count = int(StrokeMode::Count);
+    const float tw = (inner - float(count - 1) * spacing) / float(count);
+    if (!toolTakesStrokeMode(d, b.stroke)) b.stroke = StrokeMode::Dots;
+    for (int i = 0; i < count; ++i) {
+        const StrokeMode m = StrokeMode(i);
+        if (i) ImGui::SameLine();
+        if (tile(strokeModeKey(m), strokeModeIcon(m), T(strokeModeName(m)), tw, 62.0f, b.stroke == m, toolTakesStrokeMode(d, m)))
+            b.stroke = m;
+    }
+    static const char* const what[] = {
+        "Dabs one after another along the pen's path.",
+        "Draw a straight line: the dabs go along it when the pen lifts.",
+        "One stamp follows the pen over the surface and stays where the pen lifts.",
+        "Press and drag: one stamp grows from the press, as big as the drag and facing along it. A tap stamps the brush's own size.",
+        "Dabs scattered round the path, of random size, strength and angle: texture, pores, grit.",
+    };
+    ImGui::PushFont(small_);
+    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + inner);
+    ImGui::TextColored(ImColor(kDim), "%s", T(what[int(b.stroke)]));
+    ImGui::PopTextWrapPos();
+    ImGui::PopFont();
+    if (b.stroke == StrokeMode::Spray) {
+        float scatter = b.scatter * 100.0f;
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(T("Scatter"));
+        ImGui::SameLine(92.0f);
+        ImGui::SetNextItemWidth(inner - 92.0f);
+        if (ImGui::SliderFloat("##scatter", &scatter, 0.0f, 300.0f, "%.0f%%")) b.scatter = scatter / 100.0f;
+    }
+}
+
+void Shell::polyBar(ShellContext& c) {
+    SculptView& v = c.view;
+    if (v.toolDef().drive != Drive::Poly || v.polyline().empty() || v.stroking() || panel_ != Panel::None) return;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    const float bw = 110.0f, bh = 44.0f, spacing = 4.0f, width = 2.0f * bw + spacing + 16.0f;
+    ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + (vp->WorkSize.x - width) * 0.5f,
+                                   vp->WorkPos.y + vp->WorkSize.y - kBrushH - 3.0f * kGap - bh - 16.0f));
+    ImGui::Begin("##polybar", nullptr, kBarFlags | ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
+    if (wideButton("polycancel", ICON_LC_X, T("Cancel"), bw, bh)) v.polyClear();
+    ImGui::SameLine();
+    if (wideButton("polydone", ICON_LC_CHECK, T("Done"), bw, bh, true, v.polyCanFinish())) v.polyFinish();
+    ImGui::PopStyleVar();
+    remember();
+    ImGui::End();
+}
+
+void Shell::startRename(int kind, int index, const std::string& current) {
+    renameKind_ = kind;
+    renameIndex_ = index;
+    std::snprintf(renameText_, sizeof renameText_, "%s", current.c_str());
+    renameByPage_ = files::askText(T(kind == 1 ? "Layer name" : "Part name"), current, T("OK"), T("Cancel"));
+}
+
+void Shell::renameBox(ShellContext& c) {
+    if (!renameKind_) return;
+    std::string text;
+    bool ok = false, answered = false;
+    if (renameByPage_) {
+        answered = files::takeText(text, ok);
+    } else {
+        const ImGuiViewport* vp = ImGui::GetMainViewport();
+        const float w = 320.0f, half = (w - ImGui::GetStyle().ItemSpacing.x) * 0.5f;
+        ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + vp->WorkSize.x * 0.5f, vp->WorkPos.y + vp->WorkSize.y * 0.3f),
+                                ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+        ImGui::Begin("##rename", nullptr, kPanelFlags | ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::TextUnformatted(T(renameKind_ == 1 ? "Layer name" : "Part name"));
+        if (ImGui::IsWindowAppearing()) ImGui::SetKeyboardFocusHere();
+        ImGui::SetNextItemWidth(w);
+        const bool enter = ImGui::InputText("##name", renameText_, sizeof renameText_, ImGuiInputTextFlags_EnterReturnsTrue);
+        if (wideButton("renamecancel", nullptr, T("Cancel"), half, 44.0f)) answered = true;
+        ImGui::SameLine();
+        if (wideButton("renameok", nullptr, T("OK"), half, 44.0f, true) || enter) answered = ok = true;
+        text = renameText_;
+        remember();
+        ImGui::End();
+    }
+    if (!answered) return;
+    while (!text.empty() && (text.back() == ' ' || text.back() == '\t')) text.pop_back();
+    while (!text.empty() && (text.front() == ' ' || text.front() == '\t')) text.erase(text.begin());
+    if (ok && !text.empty()) {
+        if (renameKind_ == 1) c.view.renameLayer(renameIndex_, text);
+        else if (!c.view.runCommand("subtool_rename", {{"to", text}, {"index", double(renameIndex_)}})) c.notify(T("That didn't work on this Part."));
+    }
+    renameKind_ = 0;
+}
+
 void Shell::brushCircle(ShellContext& c) {
     ImDrawList* dl = ImGui::GetBackgroundDrawList();
     const BrushPrefs& b = c.view.prefs();
@@ -908,20 +1155,49 @@ void Shell::brushCircle(ShellContext& c) {
     if (sizePreview_) {
         const ImGuiViewport* vp = ImGui::GetMainViewport();
         const ImVec2 mid(vp->WorkPos.x + vp->WorkSize.x * 0.5f, vp->WorkPos.y + vp->WorkSize.y * 0.5f);
+        alphaMark(c, dl, mid, r);
         dl->AddCircle(mid, r, IM_COL32(255, 255, 255, 200), 64, 2.0f);
         if (b.focal != 0.0f) dl->AddCircle(mid, r * sf::focalRingFraction(b.focal), IM_COL32(255, 255, 255, 90), 64, 1.0f);
         return;
     }
     const bool pointer = c.input.cursor(x, y, c.nowMs);
+    if (c.view.pickingColor) { // the eyedropper: a ring with the current colour and a cross at its centre
+        if (!pointer || hits(x, y)) return;
+        const glm::vec3 col = c.view.paintColor();
+        dl->AddCircleFilled(ImVec2(x, y), 16.0f, ImGui::ColorConvertFloat4ToU32(ImVec4(col.x, col.y, col.z, 1.0f)), 32);
+        dl->AddCircle(ImVec2(x, y), 16.0f, IM_COL32_WHITE, 32, 2.0f);
+        dl->AddCircle(ImVec2(x, y), 18.0f, IM_COL32(0, 0, 0, 160), 32, 1.5f);
+        dl->AddLine(ImVec2(x - 5.0f, y), ImVec2(x + 5.0f, y), IM_COL32_WHITE, 1.5f);
+        dl->AddLine(ImVec2(x, y - 5.0f), ImVec2(x, y + 5.0f), IM_COL32_WHITE, 1.5f);
+        return;
+    }
     const Drive drive = c.view.toolDef().drive;
-    if (drive == Drive::Lasso || drive == Drive::Rect) {
-        // The mask shape being drawn (closed), or a small cross where the pen is.
+    if (drive == Drive::Gizmo) {
+        gizmoDraw(c);
+        return;
+    }
+    if (drive == Drive::Lasso || drive == Drive::Rect || drive == Drive::Line || drive == Drive::Pick || drive == Drive::Poly) {
+        // The shape being drawn (closed), or a small cross where the pen is. Orange masks (blue erases), white hides
+        // (green keeps), green makes a face group.
         const std::vector<glm::vec2> shape = c.view.maskShape();
-        const ImU32 col = c.view.invert ? IM_COL32(150, 200, 255, 230) : IM_COL32(255, 210, 120, 230);
-        if (shape.size() >= 2) {
+        const ToolDef& d = c.view.toolDef();
+        ImU32 col = c.view.invert ? IM_COL32(150, 200, 255, 230) : IM_COL32(255, 210, 120, 230);
+        if (!d.mask) col = d.shape == Shape::Cut ? IM_COL32(245, 110, 110, 235)
+                           : d.shape == Shape::Group || (d.shape == Shape::Hide && c.view.invert) ? IM_COL32(130, 225, 150, 230)
+                                                                                                  : IM_COL32(235, 235, 245, 230);
+        if (drive == Drive::Poly && !shape.empty()) {
+            // The corners so far, the closing edge faint, and a ring round the first corner (tap it to cut).
             std::vector<ImVec2> pts;
             for (const glm::vec2& p : shape) pts.push_back(ImVec2(p.x, p.y));
-            if (pts.size() >= 3) dl->AddConcavePolyFilled(pts.data(), int(pts.size()), IM_COL32(255, 210, 120, 25));
+            if (pts.size() >= 3) dl->AddConcavePolyFilled(pts.data(), int(pts.size()), (col & 0x00ffffffu) | (25u << 24));
+            if (pts.size() >= 2) dl->AddPolyline(pts.data(), int(pts.size()), col, ImDrawFlags_None, 2.0f);
+            if (pts.size() >= 3) dl->AddLine(pts.back(), pts.front(), (col & 0x00ffffffu) | (90u << 24), 1.5f);
+            for (const ImVec2& p : pts) dl->AddCircleFilled(p, 4.0f, col);
+            if (pts.size() >= 3) dl->AddCircle(pts.front(), SculptView::kPolyClosePx, col, 32, 1.5f);
+        } else if (shape.size() >= 2) {
+            std::vector<ImVec2> pts;
+            for (const glm::vec2& p : shape) pts.push_back(ImVec2(p.x, p.y));
+            if (pts.size() >= 3) dl->AddConcavePolyFilled(pts.data(), int(pts.size()), (col & 0x00ffffffu) | (25u << 24));
             dl->AddPolyline(pts.data(), int(pts.size()), col, ImDrawFlags_Closed, 2.0f);
         } else if (pointer && !hits(x, y)) {
             dl->AddLine(ImVec2(x - 8.0f, y), ImVec2(x + 8.0f, y), col, 1.5f);
@@ -930,6 +1206,14 @@ void Shell::brushCircle(ShellContext& c) {
         return;
     }
     float bx, by, br;
+    if (glm::vec2 la, lb; c.view.strokeLine(la, lb)) {
+        // A Line stroke: the line, with the brush at both ends.
+        const ImU32 col = IM_COL32(120, 180, 255, 210);
+        dl->AddLine(ImVec2(la.x, la.y), ImVec2(lb.x, lb.y), col, 2.0f);
+        dl->AddCircle(ImVec2(la.x, la.y), b.radiusPx, IM_COL32(120, 180, 255, 120), 64, 1.5f);
+        dl->AddCircle(ImVec2(lb.x, lb.y), b.radiusPx, col, 64, 1.5f);
+        return;
+    }
     if (c.view.strokePoint(bx, by, br)) {
         // The brush where it is (behind the pen with Steady Stroke), as big as the pressure makes it.
         const ImU32 col = IM_COL32(120, 180, 255, 200);
@@ -937,15 +1221,747 @@ void Shell::brushCircle(ShellContext& c) {
             dl->AddLine(ImVec2(x, y), ImVec2(bx, by), IM_COL32(255, 255, 255, 120), 1.5f);
             dl->AddCircleFilled(ImVec2(x, y), 3.0f, IM_COL32(255, 255, 255, 160));
         }
+        alphaMark(c, dl, ImVec2(bx, by), br);
         dl->AddCircle(ImVec2(bx, by), br, col, 64, 1.5f);
         if (b.focal != 0.0f) dl->AddCircle(ImVec2(bx, by), br * sf::focalRingFraction(b.focal), IM_COL32(120, 180, 255, 90), 64, 1.0f);
         return;
     }
     if (!pointer || hits(x, y)) return;
     const ImU32 col = c.view.toolDef().mask ? IM_COL32(255, 210, 120, 170) : IM_COL32(255, 255, 255, 150);
+    alphaMark(c, dl, ImVec2(x, y), r);
     dl->AddCircle(ImVec2(x, y), r, col, 64, 1.5f);
     if (b.focal != 0.0f) dl->AddCircle(ImVec2(x, y), r * sf::focalRingFraction(b.focal), IM_COL32(255, 255, 255, 60), 64, 1.0f);
     if (c.view.invert) dl->AddLine(ImVec2(x - 5.0f, y), ImVec2(x + 5.0f, y), col, 1.5f);
+}
+
+// --- Alpha --------------------------------------------------------------------------------------------------------
+
+unsigned Shell::alphaTexture(int builtin) {
+    const auto& all = sf::BrushAlpha::builtins();
+    if (builtin < 0 || builtin >= int(all.size())) return 0;
+    if (alphaTex_.size() != all.size()) alphaTex_.assign(all.size(), 0u);
+    unsigned& tex = alphaTex_[size_t(builtin)];
+    if (tex) return tex;
+    // The alpha as opacity on white: on the picker's dark tiles it shows as grey on black, in the brush circle as a
+    // faint print of the stamp. It repeats (GL_REPEAT) so the circle can show the tiling.
+    constexpr int n = 64;
+    std::vector<uint8_t> px(size_t(n) * n * 4, 255);
+    const sf::BrushAlpha& a = all[size_t(builtin)];
+    for (int y = 0; y < n; ++y)
+        for (int x = 0; x < n; ++x) {
+            const float u = (float(x) + 0.5f) / float(n) * 2.0f - 1.0f, v = 1.0f - (float(y) + 0.5f) / float(n) * 2.0f;
+            px[(size_t(y) * n + size_t(x)) * 4 + 3] = uint8_t(std::clamp(a.sample(u, v), 0.0f, 1.0f) * 255.0f + 0.5f);
+        }
+    GLint before = 0;
+    gl::GetIntegerv(kGlTextureBinding2D, &before);
+    GLuint id = 0;
+    gl::GenTextures(1, &id);
+    gl::BindTexture(GL_TEXTURE_2D, id);
+    gl::TexImage2D(GL_TEXTURE_2D, 0, GLint(GL_RGBA8), n, n, 0, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GLint(kGlRepeat));
+    gl::TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GLint(kGlRepeat));
+    gl::BindTexture(GL_TEXTURE_2D, GLuint(before)); // (the renderer's binding stays as it was)
+    tex = id;
+    return tex;
+}
+
+void Shell::alphaSection(BrushPrefs& b, float inner) {
+    ImGui::Separator();
+    ImGui::TextColored(ImColor(kDim), "%s", T("Alpha (brush shape)"));
+    // The built-ins as pictures, five to a row, each with its name.
+    const auto& all = sf::BrushAlpha::builtins();
+    constexpr int perRow = 5;
+    const float spacing = 4.0f, labelSize = small_->FontSize / density_;
+    const float cellW = (inner - spacing * float(perRow - 1)) / float(perRow), pic = cellW - 10.0f;
+    const float cellH = pic + labelSize + 12.0f;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
+    for (int i = 0; i < int(all.size()); ++i) {
+        if (i % perRow) ImGui::SameLine();
+        ImGui::PushID(i);
+        const bool pressed = ImGui::InvisibleButton("##alpha", ImVec2(cellW, cellH));
+        const bool on = b.alpha == all[size_t(i)].name;
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        const ImVec2 a = ImGui::GetItemRectMin(), z = ImGui::GetItemRectMax();
+        const float rounding = ImGui::GetStyle().FrameRounding;
+        dl->AddRectFilled(a, z, on ? kAccent : IM_COL32(32, 34, 40, 255), rounding);
+        if (ImGui::IsItemActive()) dl->AddRectFilled(a, z, kPressed, rounding);
+        else if (mouseHover()) dl->AddRectFilled(a, z, kHover, rounding);
+        const ImVec2 p0(a.x + (cellW - pic) * 0.5f, a.y + 5.0f), p1(p0.x + pic, p0.y + pic);
+        dl->AddRectFilled(p0, p1, IM_COL32(0, 0, 0, 255), 4.0f);
+        if (const unsigned tex = alphaTexture(i)) dl->AddImage(ImTextureID(uintptr_t(tex)), p0, p1);
+        const char* name = T(all[size_t(i)].name.c_str());
+        const ImVec2 ns = small_->CalcTextSizeA(labelSize, FLT_MAX, 0.0f, name);
+        const ImVec4 clip(a.x + 1.0f, a.y, z.x - 1.0f, z.y);
+        dl->AddText(small_, labelSize, ImVec2(a.x + std::max((cellW - ns.x) * 0.5f, 2.0f), p1.y + 3.0f),
+                    on ? IM_COL32_WHITE : kText, name, nullptr, 0.0f, &clip);
+        if (pressed) b.alpha = all[size_t(i)].name;
+        ImGui::PopID();
+    }
+    ImGui::PopStyleVar();
+    const auto dimText = [&](const char* text) {
+        ImGui::PushFont(small_);
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + inner);
+        ImGui::TextColored(ImColor(kDim), "%s", text);
+        ImGui::PopTextWrapPos();
+        ImGui::PopFont();
+    };
+    dimText(T(alphaWhat(b.alpha)));
+    if (b.alpha == "Round") return;
+
+    // How it turns and repeats on each dab (upstream's alpha options).
+    sf::AlphaOptions& o = b.alphaOptions;
+    const float labelW = 92.0f;
+    const auto label = [&](const char* text) {
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(text);
+        ImGui::SameLine(labelW);
+        ImGui::SetNextItemWidth(inner - labelW);
+    };
+    ImGui::Checkbox(T("Follow the stroke"), &o.followStroke);
+    dimText(T("The top of the shape points the way you draw (scales, stitches, hair)."));
+    label(T("Angle"));
+    if (ImGui::SliderFloat("##alphaangle", &o.angle, -180.0f, 180.0f, "%.0f\u00b0")) o.angle = std::round(o.angle);
+    label(T("Random angle"));
+    if (ImGui::SliderFloat("##alphajitter", &o.jitter, 0.0f, 180.0f, o.jitter > 0.0f ? "\u00b1%.0f\u00b0" : T("off")))
+        o.jitter = std::round(o.jitter);
+    label(T("Tile across"));
+    ImGui::SliderInt("##alphatilex", &o.tileX, 1, 8, o.tileX > 1 ? "%d" : T("once"));
+    label(T("Tile down"));
+    ImGui::SliderInt("##alphatiley", &o.tileY, 1, 8, o.tileY > 1 ? "%d" : T("once"));
+}
+
+void Shell::alphaMark(ShellContext& c, ImDrawList* dl, const ImVec2& center, float radius) {
+    if (!c.view.alphaShown()) return;
+    const BrushPrefs& b = c.view.prefs();
+    // The stamp covers the square round the circle; its top is the screen's up turned by the angle (counter-
+    // clockwise). Window y points down.
+    const float a = c.view.alphaAngle();
+    const ImVec2 up(-std::sin(a), -std::cos(a)), right(std::cos(a), -std::sin(a));
+    const auto at = [&](float sx, float sy) {
+        return ImVec2(center.x + (right.x * sx + up.x * sy) * radius, center.y + (right.y * sx + up.y * sy) * radius);
+    };
+    if (const unsigned tex = alphaTexture(alphaIndex(b.alpha))) {
+        const float tx = float(b.alphaOptions.tileX), ty = float(b.alphaOptions.tileY);
+        dl->AddImageQuad(ImTextureID(uintptr_t(tex)), at(-1.0f, 1.0f), at(1.0f, 1.0f), at(1.0f, -1.0f), at(-1.0f, -1.0f),
+                         ImVec2(0.0f, 0.0f), ImVec2(tx, 0.0f), ImVec2(tx, ty), ImVec2(0.0f, ty), IM_COL32(255, 255, 255, 70));
+    }
+    // A small arrowhead just outside the circle where the alpha's top is.
+    const float s = 7.0f / std::max(radius, 1.0f);
+    dl->AddTriangleFilled(at(0.0f, 1.0f + 2.0f * s), at(-s, 1.0f + 0.4f * s), at(s, 1.0f + 0.4f * s), IM_COL32(255, 255, 255, 220));
+}
+
+void Shell::groupsPanel(ShellContext& c) {
+    SculptView& v = c.view;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + vp->WorkSize.x - kStripW - 2.0f * kGap, vp->WorkPos.y + kBarH + kGap),
+                            ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, vp->WorkSize.y - kBarH - kBrushH - 5.0f * kGap));
+    ImGui::Begin("##groupspanel", nullptr, kPanelFlags);
+    const float w = 300.0f, spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float half = (w - spacing) * 0.5f, h = 46.0f;
+
+    // The tools: hide by lasso / rectangle, make a face group by lasso, tap a group.
+    const char* keys[] = {"HideLasso", "HideRect", "GroupLasso", "GroupPick"};
+    for (int i = 0; i < 4; ++i) {
+        const int t = toolIndex(keys[i]);
+        const ToolDef& d = toolDefs()[size_t(t)];
+        if (i % 2) ImGui::SameLine();
+        if (tile(d.key, d.icon, T(d.name), half, kBrushH, v.tool == t)) {
+            selectTool(c, t);
+            closePanel();
+        }
+    }
+    if (wideButton("showgroups", ICON_LC_PALETTE, T("Show face group colours"), w, h, showGroups_)) showGroups_ = !showGroups_;
+
+    // Visibility, then face groups (each one undo step).
+    struct Op {
+        const char* icon;
+        const char* label;
+        SculptView::GroupOp op;
+        bool enabled;
+    };
+    const Op ops[] = {
+        {ICON_LC_EYE, "Show all", SculptView::GroupOp::ShowAll, v.hasHidden()},
+        {ICON_LC_EYE_CLOSED, "Invert visibility", SculptView::GroupOp::InvertVisibility, v.hasHidden()},
+        {ICON_LC_WAND, "Group by shape", SculptView::GroupOp::ByNormals, true},
+        {ICON_LC_BOXES, "Group by parts", SculptView::GroupOp::ByParts, true},
+        {ICON_LC_CONTRAST, "Group from mask", SculptView::GroupOp::FromMask, v.hasMask()},
+        {ICON_LC_COMBINE, "Merge groups", SculptView::GroupOp::MergeVisible, v.hasGroups()},
+        {ICON_LC_ERASER, "Clear groups", SculptView::GroupOp::Clear, v.hasGroups()},
+    };
+    for (size_t i = 0; i < std::size(ops); ++i) {
+        if (i == 2) ImGui::Separator();
+        if (i % 2) ImGui::SameLine();
+        if (wideButton(ops[i].label, ops[i].icon, T(ops[i].label), half, h, false, ops[i].enabled) && v.groupOp(ops[i].op) &&
+            i >= 2)
+            showGroups_ = true; // (see what the groups became)
+    }
+    ImGui::PushFont(small_);
+    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + w);
+    ImGui::TextColored(ImColor(kDim), "%s", T("Hidden parts stay as they are: brushes and masks leave them alone. Merge and the automatic groups work on what is visible."));
+    ImGui::PopTextWrapPos();
+    ImGui::PopFont();
+    touchScroll();
+    remember();
+    ImGui::End();
+}
+
+// --- Parts and the Gizmo ------------------------------------------------------------------------------------------
+
+void Shell::partsPanel(ShellContext& c) {
+    SculptView& v = c.view;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + vp->WorkSize.x - kStripW - 2.0f * kGap, vp->WorkPos.y + kBarH + kGap),
+                            ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, vp->WorkSize.y - kBarH - kBrushH - 5.0f * kGap));
+    ImGui::Begin("##partspanel", nullptr, kPanelFlags);
+    const float w = 320.0f, spacing = ImGui::GetStyle().ItemSpacing.x;
+    const float half = (w - spacing) * 0.5f, quarter = (w - 3.0f * spacing) / 4.0f, h = 46.0f;
+    const auto run = [&](const char* command, const sf::Args& args = {}) {
+        std::string message;
+        if (!v.runCommand(command, args, &message)) c.notify(T("That didn't work on this Part."));
+    };
+
+    // The list: tap a Part to sculpt it, its eye to show or hide it.
+    const std::vector<SculptView::PartInfo> parts = v.parts();
+    const float uiSize = ui_->FontSize / density_, smallSize = small_->FontSize / density_;
+    for (int i = 0; i < int(parts.size()); ++i) {
+        const SculptView::PartInfo& p = parts[size_t(i)];
+        ImGui::PushID(i);
+        const float rowH = 46.0f, eyeW = 46.0f;
+        if (tile("eye", p.visible ? ICON_LC_EYE : ICON_LC_EYE_OFF, "", eyeW, rowH, false, !p.active))
+            run("subtool_visibility", {{"index", double(i)}});
+        ImGui::SameLine();
+        const bool pressed = ImGui::InvisibleButton("##row", ImVec2(w - eyeW - spacing, rowH));
+        const ImVec2 a = ImGui::GetItemRectMin(), b = ImGui::GetItemRectMax();
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        const float rounding = ImGui::GetStyle().FrameRounding;
+        if (p.active) dl->AddRectFilled(a, b, kAccent, rounding);
+        else if (ImGui::IsItemActive()) dl->AddRectFilled(a, b, kPressed, rounding);
+        else if (mouseHover()) dl->AddRectFilled(a, b, kHover, rounding);
+        const std::string count = i18n::format(T("%s triangles"), grouped((long long)p.triangles).c_str());
+        const float countW = small_->CalcTextSizeA(smallSize, FLT_MAX, 0.0f, count.c_str()).x;
+        const ImVec4 clip(a.x, a.y, b.x - countW - 16.0f, b.y);
+        dl->AddText(ui_, uiSize, ImVec2(a.x + 10.0f, a.y + (rowH - uiSize) * 0.5f), p.visible || p.active ? kText : kDim,
+                    p.name.c_str(), nullptr, 0.0f, &clip);
+        dl->AddText(small_, smallSize, ImVec2(b.x - countW - 10.0f, a.y + (rowH - smallSize) * 0.5f), p.active ? IM_COL32_WHITE : kDim,
+                    count.c_str());
+        if (pressed && !p.active) run("subtool_select", {{"index", double(i)}});
+        ImGui::PopID();
+    }
+
+    // Add a primitive beside the model (it becomes the active Part).
+    ImGui::Separator();
+    ImGui::TextColored(ImColor(kDim), "%s", T("Add"));
+    struct Shape {
+        const char* type;
+        const char* icon;
+        const char* label;
+    };
+    static const Shape shapes[] = {{"sphere", ICON_LC_CIRCLE, "Sphere"}, {"cube", ICON_LC_BOX, "Cube"},
+                                   {"cylinder", ICON_LC_CYLINDER, "Cylinder"}, {"torus", ICON_LC_TORUS, "Torus"}};
+    for (int i = 0; i < 4; ++i) {
+        if (i) ImGui::SameLine();
+        if (tile(shapes[i].type, shapes[i].icon, T(shapes[i].label), quarter, kBrushH)) run("subtool_append", {{"type", std::string(shapes[i].type)}});
+    }
+
+    // What to do with the active Part.
+    ImGui::Separator();
+    const int n = int(parts.size()), active = v.activePart();
+    int shown = 0;
+    for (const SculptView::PartInfo& p : parts) shown += p.visible || p.active;
+    if (!confirmCommand_.empty()) {
+        // Delete and the splits can't be undone: ask first.
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + w);
+        ImGui::TextUnformatted(T("This can't be undone. Go ahead?"));
+        ImGui::PopTextWrapPos();
+        if (wideButton("confirmyes", nullptr, T("Yes"), half, h, true)) {
+            run(confirmCommand_.c_str());
+            confirmCommand_.clear();
+        }
+        ImGui::SameLine();
+        if (wideButton("confirmno", nullptr, T("Cancel"), half, h)) confirmCommand_.clear();
+    } else {
+        struct Op {
+            const char* icon;
+            const char* label;
+            const char* command;
+            bool enabled;
+            bool ask; // not undoable
+            sf::Args args;
+        };
+        const Op ops[] = {
+            {ICON_LC_MOVE_3D, "Gizmo", "", true, false, {}},
+            {ICON_LC_PENCIL, "Rename", "", true, false, {}},
+            {ICON_LC_COPY, "Duplicate", "subtool_duplicate", true, false, {}},
+            {ICON_LC_ARROW_UP, "Move up", "subtool_move", active > 0, false, {{"direction", std::string("up")}}},
+            {ICON_LC_ARROW_DOWN, "Move down", "subtool_move", active < n - 1, false, {{"direction", std::string("down")}}},
+            {ICON_LC_MERGE, "Merge down", "subtool_merge_down", active < n - 1, false, {}},
+            {ICON_LC_COMBINE, "Merge visible", "subtool_merge_visible", shown > 1, false, {}},
+            {ICON_LC_SCAN_EYE, "Show only this", "subtool_solo", n > 1, false, {}},
+            {ICON_LC_EYE, "Show all", "subtool_show_all", shown < n, false, {}},
+            {ICON_LC_SPLIT, "Split by groups", "subtool_split_groups", v.hasGroups(), true, {}},
+            {ICON_LC_UNGROUP, "Split into pieces", "subtool_split_parts", true, true, {}},
+            {ICON_LC_TRASH_2, "Delete", "subtool_delete", n > 1, true, {}},
+        };
+        for (size_t i = 0; i < std::size(ops); ++i) {
+            if (i % 2) ImGui::SameLine();
+            const bool gizmoOn = i == 0 && v.toolDef().drive == Drive::Gizmo;
+            if (!wideButton(ops[i].label, ops[i].icon, T(ops[i].label), half, h, gizmoOn, ops[i].enabled)) continue;
+            if (i == 0) {
+                selectTool(c, toolIndex("Gizmo"));
+                closePanel();
+            } else if (i == 1) {
+                startRename(2, active, parts[size_t(active)].name);
+            } else if (ops[i].ask) {
+                confirmCommand_ = ops[i].command;
+            } else {
+                run(ops[i].command, ops[i].args);
+            }
+        }
+    }
+    ImGui::PushFont(small_);
+    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + w);
+    ImGui::TextColored(ImColor(kDim), "%s", T("Brushes work on the highlighted Part. Merge down joins it with the one below it."));
+    ImGui::PopTextWrapPos();
+    ImGui::PopFont();
+    touchScroll();
+    remember();
+    ImGui::End();
+}
+
+void Shell::layersPanel(ShellContext& c) {
+    // Nomad's layers: strokes go into the highlighted layer (or the base); each layer's slider sets how strongly it
+    // shows, its eye switches it off and on again.
+    SculptView& v = c.view;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + vp->WorkSize.x - kStripW - 2.0f * kGap, vp->WorkPos.y + kBarH + kGap),
+                            ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, vp->WorkSize.y - kBarH - kBrushH - 5.0f * kGap));
+    ImGui::Begin("##layerspanel", nullptr, kPanelFlags);
+    const float w = 320.0f, spacing = ImGui::GetStyle().ItemSpacing.x, half = (w - spacing) * 0.5f, h = 46.0f, eyeW = 46.0f;
+    const float uiSize = ui_->FontSize / density_;
+    const auto run = [&](const char* command, const sf::Args& args = {}) {
+        if (!v.runCommand(command, args)) c.notify(T("That didn't work on this Part."));
+    };
+    const auto row = [&](const char* id, const char* name, bool active) {
+        const bool pressed = ImGui::InvisibleButton(id, ImVec2(w - eyeW - spacing, h));
+        const ImVec2 a = ImGui::GetItemRectMin(), b = ImGui::GetItemRectMax();
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        const float rounding = ImGui::GetStyle().FrameRounding;
+        if (active) dl->AddRectFilled(a, b, kAccent, rounding);
+        else if (ImGui::IsItemActive()) dl->AddRectFilled(a, b, kPressed, rounding);
+        else if (mouseHover()) dl->AddRectFilled(a, b, kHover, rounding);
+        const ImVec4 clip(a.x, a.y, b.x - 8.0f, b.y);
+        dl->AddText(ui_, uiSize, ImVec2(a.x + 10.0f, a.y + (h - uiSize) * 0.5f), active ? IM_COL32_WHITE : kText, name, nullptr, 0.0f, &clip);
+        return pressed;
+    };
+
+    const std::vector<SculptView::LayerInfo> layers = v.layers();
+    layerWeightBefore_.resize(layers.size(), 1.0f);
+    // The newest layer on top, the base at the bottom.
+    for (int i = int(layers.size()) - 1; i >= 0; --i) {
+        const SculptView::LayerInfo& l = layers[size_t(i)];
+        ImGui::PushID(i);
+        const bool on = l.weight != 0.0f;
+        if (tile("eye", on ? ICON_LC_EYE : ICON_LC_EYE_OFF, "", eyeW, h)) {
+            if (on) {
+                layerWeightBefore_[size_t(i)] = l.weight;
+                v.setLayerWeight(i, 0.0f);
+            } else {
+                v.setLayerWeight(i, layerWeightBefore_[size_t(i)] != 0.0f ? layerWeightBefore_[size_t(i)] : 1.0f);
+            }
+        }
+        ImGui::SameLine();
+        if (row("##layer", l.name.c_str(), v.activeLayer() == i) && v.activeLayer() != i) run("layer_set_active", {{"index", double(i)}});
+        float percent = l.weight * 100.0f;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + eyeW + spacing);
+        ImGui::SetNextItemWidth(w - eyeW - spacing);
+        if (ImGui::SliderFloat("##weight", &percent, 0.0f, 100.0f, "%.0f%%")) v.setLayerWeight(i, percent / 100.0f);
+        ImGui::PopID();
+    }
+    ImGui::Dummy(ImVec2(eyeW, h));
+    ImGui::SameLine();
+    if (row("##base", T("Base"), v.activeLayer() < 0) && v.activeLayer() >= 0) run("layer_set_active", {{"index", -1.0}});
+
+    ImGui::Separator();
+    if (wideButton("addlayer", ICON_LC_PLUS, T("New layer"), half, h)) run("layer_add");
+    ImGui::SameLine();
+    if (wideButton("removelayer", ICON_LC_TRASH_2, T("Delete layer"), half, h, false, v.activeLayer() >= 0))
+        run("layer_remove", {{"index", double(v.activeLayer())}});
+    if (wideButton("renamelayer", ICON_LC_PENCIL, T("Rename"), half, h, false, v.activeLayer() >= 0))
+        startRename(1, v.activeLayer(), layers[size_t(v.activeLayer())].name);
+    ImGui::SameLine();
+    {
+        const int eraser = toolIndex("EraseLayer");
+        if (wideButton("eraselayer", ICON_LC_ERASER, T("Erase Layer"), half, h, v.tool == eraser, v.activeLayer() >= 0)) {
+            selectTool(c, eraser);
+            closePanel();
+        }
+    }
+    ImGui::PushFont(small_);
+    ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + w);
+    ImGui::TextColored(ImColor(kDim), "%s", T("Strokes go into the highlighted layer, so you can turn them up, down or off later. Each Part has its own layers."));
+    ImGui::PopTextWrapPos();
+    ImGui::PopFont();
+    touchScroll();
+    remember();
+    ImGui::End();
+}
+
+void Shell::colorPanel(ShellContext& c) {
+    SculptView& v = c.view;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    const float w = 330.0f;
+    ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x + kStripW + 2.0f * kGap, vp->WorkPos.y + kBarH + kGap));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(w, 0.0f), ImVec2(w, vp->WorkSize.y - kBarH - kBrushH - 5.0f * kGap));
+    ImGui::Begin("##colorpanel", nullptr, kPanelFlags);
+    const float inner = w - ImGui::GetStyle().WindowPadding.x * 2.0f - ImGui::GetStyle().ScrollbarSize;
+    const float spacing = ImGui::GetStyle().ItemSpacing.x, half = (inner - spacing) * 0.5f, h = 44.0f;
+    const auto dimText = [&](const char* text) {
+        ImGui::PushFont(small_);
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + inner);
+        ImGui::TextColored(ImColor(kDim), "%s", text);
+        ImGui::PopTextWrapPos();
+        ImGui::PopFont();
+    };
+    const auto run = [&](const char* command, const sf::Args& args = {}) {
+        std::string message;
+        if (!v.paintCommand(command, args, &message)) c.notify(T("That didn't work on this Part."));
+    };
+
+    // The colour: a hue wheel with its triangle, then a row of common colours.
+    glm::vec3 col = v.paintColor();
+    float rgb[3] = {col.x, col.y, col.z};
+    ImGui::SetNextItemWidth(inner);
+    if (ImGui::ColorPicker3("##paintcolor", rgb,
+                            ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs |
+                                ImGuiColorEditFlags_NoLabel))
+        v.setPaintColor({rgb[0], rgb[1], rgb[2]});
+    static const glm::vec3 swatches[] = {
+        {1.0f, 1.0f, 1.0f},    {0.85f, 0.85f, 0.85f}, {0.5f, 0.5f, 0.5f},   {0.12f, 0.12f, 0.12f}, {0.93f, 0.78f, 0.67f},
+        {0.78f, 0.55f, 0.42f}, {0.45f, 0.29f, 0.19f}, {0.85f, 0.2f, 0.18f}, {0.95f, 0.55f, 0.15f}, {0.96f, 0.85f, 0.3f},
+        {0.35f, 0.7f, 0.3f},   {0.25f, 0.6f, 0.85f},  {0.2f, 0.3f, 0.75f},  {0.55f, 0.35f, 0.75f}, {0.95f, 0.6f, 0.75f},
+    };
+    {
+        const int perRow = 5;
+        const float sw = (inner - float(perRow - 1) * spacing) / float(perRow);
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        for (int i = 0; i < int(std::size(swatches)); ++i) {
+            if (i % perRow) ImGui::SameLine();
+            ImGui::PushID(i);
+            if (ImGui::InvisibleButton("##swatch", ImVec2(sw, 34.0f))) v.setPaintColor(swatches[i]);
+            const ImVec2 a = ImGui::GetItemRectMin(), b = ImGui::GetItemRectMax();
+            const glm::vec3& s = swatches[i];
+            dl->AddRectFilled(a, b, ImGui::ColorConvertFloat4ToU32(ImVec4(s.x, s.y, s.z, 1.0f)), 6.0f);
+            if (glm::length(s - col) < 0.01f) dl->AddRect(a, b, IM_COL32_WHITE, 6.0f, 0, 2.5f);
+            ImGui::PopID();
+        }
+    }
+
+    // The tools: the Paint brush, the eyedropper.
+    ImGui::Separator();
+    const int paintTool = toolIndex("Paint");
+    if (wideButton("paintbrush", ICON_LC_BRUSH, T("Paint"), half, h, v.tool == paintTool)) {
+        selectTool(c, paintTool);
+        closePanel();
+    }
+    ImGui::SameLine();
+    if (wideButton("eyedropper", ICON_LC_PIPETTE, T("Pick colour"), half, h, v.pickingColor)) {
+        v.pickingColor = !v.pickingColor;
+        if (v.pickingColor) closePanel();
+    }
+    dimText(T("Pick colour: tap the model to take the colour there."));
+
+    // The whole Part at once (each one undo step).
+    ImGui::Separator();
+    if (wideButton("fill", ICON_LC_PAINT_BUCKET, T("Fill"), half, h)) run("paint_fill");
+    ImGui::SameLine();
+    if (wideButton("cavity", ICON_LC_DROPLET, T("Color the creases"), half, h)) run("paint_from_cavity", {{"color", std::string(sf::colorToHex(sf::srgbToLinear(col)))}});
+    if (wideButton("clearpaint", ICON_LC_ERASER, T("Clear the paint"), inner, h, false, v.hasPaint())) run("paint_clear");
+    dimText(T("Fill paints the Part with the colour (not where it is masked). Color the creases paints the colour into its creases and dents."));
+
+    // Paint layers: the newest on top, the base at the bottom.
+    ImGui::Separator();
+    ImGui::TextColored(ImColor(kDim), "%s", T("Paint layers"));
+    const std::vector<SculptView::PaintLayerInfo> layers = v.paintLayers();
+    paintOpacityBefore_.resize(layers.size(), 1.0f);
+    const float eyeW = 46.0f, uiSize = ui_->FontSize / density_;
+    const auto row = [&](const char* id, const char* name, bool active) {
+        const bool pressed = ImGui::InvisibleButton(id, ImVec2(inner - eyeW - spacing, h));
+        const ImVec2 a = ImGui::GetItemRectMin(), b = ImGui::GetItemRectMax();
+        ImDrawList* dl = ImGui::GetWindowDrawList();
+        const float rounding = ImGui::GetStyle().FrameRounding;
+        if (active) dl->AddRectFilled(a, b, kAccent, rounding);
+        else if (ImGui::IsItemActive()) dl->AddRectFilled(a, b, kPressed, rounding);
+        else if (mouseHover()) dl->AddRectFilled(a, b, kHover, rounding);
+        const ImVec4 clip(a.x, a.y, b.x - 8.0f, b.y);
+        dl->AddText(ui_, uiSize, ImVec2(a.x + 10.0f, a.y + (h - uiSize) * 0.5f), active ? IM_COL32_WHITE : kText, name, nullptr, 0.0f, &clip);
+        return pressed;
+    };
+    for (int i = int(layers.size()) - 1; i >= 0; --i) {
+        const SculptView::PaintLayerInfo& l = layers[size_t(i)];
+        ImGui::PushID(i);
+        if (tile("eye", l.visible ? ICON_LC_EYE : ICON_LC_EYE_OFF, "", eyeW, h)) v.setPaintLayerLook(i, l.opacity, !l.visible);
+        ImGui::SameLine();
+        if (row("##paintlayer", l.name.c_str(), v.activePaintLayer() == i) && v.activePaintLayer() != i)
+            run("paint_layer_select", {{"index", double(i)}});
+        float percent = l.opacity * 100.0f;
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + eyeW + spacing);
+        ImGui::SetNextItemWidth(inner - eyeW - spacing);
+        if (ImGui::SliderFloat("##opacity", &percent, 0.0f, 100.0f, "%.0f%%")) v.setPaintLayerLook(i, percent / 100.0f, l.visible);
+        ImGui::PopID();
+    }
+    ImGui::Dummy(ImVec2(eyeW, h));
+    ImGui::SameLine();
+    if (row("##paintbase", T("Base"), v.activePaintLayer() < 0) && v.activePaintLayer() >= 0) run("paint_layer_select", {{"index", -1.0}});
+    if (wideButton("addpaintlayer", ICON_LC_PLUS, T("New layer"), half, h)) run("paint_layer_add");
+    ImGui::SameLine();
+    if (wideButton("removepaintlayer", ICON_LC_TRASH_2, T("Delete layer"), half, h, false, v.activePaintLayer() >= 0))
+        run("paint_layer_delete", {{"index", double(v.activePaintLayer())}});
+    if (wideButton("mergepaintlayer", ICON_LC_MERGE, T("Merge down"), half, h, false, v.activePaintLayer() >= 0))
+        run("paint_layer_merge", {{"index", double(v.activePaintLayer())}});
+    ImGui::SameLine();
+    if (wideButton("flattenpaint", ICON_LC_LAYERS, T("Merge all"), half, h, false, !layers.empty())) run("paint_layer_flatten");
+    dimText(T("Painting goes into the highlighted layer, so you can fade it or turn it off later."));
+    touchScroll();
+    remember();
+    ImGui::End();
+}
+
+void Shell::materialPanel(ShellContext& c) {
+    SculptView& v = c.view;
+    sf::RenderSettings& r = v.settings;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(materialButtonX_, vp->WorkPos.y + kBarH + 4.0f));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, vp->WorkSize.y - kBarH - kBrushH - 5.0f * kGap));
+    ImGui::Begin("##materialpanel", nullptr, kPanelFlags);
+    const float w = 340.0f, spacing = ImGui::GetStyle().ItemSpacing.x, half = (w - spacing) * 0.5f, h = 44.0f, labelW = 96.0f;
+    const auto dimText = [&](const char* text) {
+        ImGui::PushFont(small_);
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + w);
+        ImGui::TextColored(ImColor(kDim), "%s", text);
+        ImGui::PopTextWrapPos();
+        ImGui::PopFont();
+    };
+    const auto label = [&](const char* text) {
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(text);
+        ImGui::SameLine(labelW);
+        ImGui::SetNextItemWidth(w - labelW);
+    };
+
+    // Two ways to shade: a MatCap (a picture of a lit ball) or realistic light from an environment.
+    if (wideButton("matcapmode", ICON_LC_CIRCLE, T("MatCap"), half, h, !r.pbr())) {
+        r.shading = sf::RenderSettings::Shading::LitSphere;
+        if (r.matcap < 0) r.matcap = sf::defaultMatcap();
+    }
+    ImGui::SameLine();
+    if (wideButton("pbrmode", ICON_LC_SUN, T("Realistic"), half, h, r.pbr())) r.shading = sf::RenderSettings::Shading::Pbr;
+
+    if (!r.pbr()) {
+        // The MatCaps as pictures, four to a row.
+        const int perRow = 4, count = sf::matcapCount();
+        const float tw = (w - float(perRow - 1) * spacing) / float(perRow), smallSize = small_->FontSize / density_;
+        int shown = 0;
+        for (int k = 0; k < count; ++k) {
+            const int m = sf::matcapInListOrder(k);
+            if (m < 0 || !sf::isMatcapListed(m)) continue;
+            if (shown++ % perRow) ImGui::SameLine();
+            ImGui::PushID(m);
+            const bool pressed = ImGui::InvisibleButton("##matcap", ImVec2(tw, tw + 22.0f));
+            const ImVec2 a = ImGui::GetItemRectMin();
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            const ImVec2 p0(a.x + 4.0f, a.y + 2.0f), p1(a.x + tw - 4.0f, a.y + tw - 6.0f);
+            if (const unsigned tex = v.matcapTexture(m)) // (rows bottom-up: flip)
+                dl->AddImageRounded(ImTextureID(tex), p0, p1, ImVec2(0, 1), ImVec2(1, 0), IM_COL32_WHITE, (p1.x - p0.x) * 0.5f);
+            if (r.matcap == m) dl->AddCircle(ImVec2((p0.x + p1.x) * 0.5f, (p0.y + p1.y) * 0.5f), (p1.x - p0.x) * 0.5f + 2.0f, kAccent, 48, 3.0f);
+            const char* name = T(sf::matcapName(m));
+            const float nw = small_->CalcTextSizeA(smallSize, FLT_MAX, 0.0f, name).x;
+            dl->AddText(small_, smallSize, ImVec2(a.x + std::max((tw - nw) * 0.5f, 0.0f), a.y + tw - 2.0f), r.matcap == m ? kText : kDim, name);
+            if (pressed) r.matcap = m;
+            ImGui::PopID();
+        }
+        dimText(T("A MatCap is a picture of a lit ball: quick, and good for checking forms. The paint colours show through."));
+    } else {
+        // Realistic: an environment (HDRI) lights the model; turn it, brighten it, show it behind.
+        ImGui::TextColored(ImColor(kDim), "%s", T("Environment"));
+        const auto& envs = sf::environments();
+        for (int i = 0; i < int(envs.size()); ++i) {
+            if (i % 2) ImGui::SameLine();
+            if (wideButton(envs[size_t(i)].id.c_str(), nullptr, T(envs[size_t(i)].label.c_str()), half, h, r.environment == i)) r.environment = i;
+        }
+        label(T("Turn"));
+        ImGui::SliderFloat("##envturn", &r.environmentRotation, -180.0f, 180.0f, "%.0f");
+        label(T("Brightness"));
+        ImGui::SliderFloat("##exposure", &r.exposure, -3.0f, 3.0f, "%+.1f");
+        ImGui::Checkbox(T("Show it behind the model"), &r.environmentBackground);
+        ImGui::Separator();
+        ImGui::TextColored(ImColor(kDim), "%s", T("Surface"));
+        label(T("Roughness"));
+        ImGui::SliderFloat("##rough", &r.pbrRoughness, 0.02f, 1.0f, "%.2f");
+        label(T("Metal"));
+        ImGui::SliderFloat("##metal", &r.pbrMetallic, 0.0f, 1.0f, "%.2f");
+        if (r.environment >= 0 && r.environment < int(envs.size()) && !envs[size_t(r.environment)].credit.empty())
+            dimText(envs[size_t(r.environment)].credit.c_str());
+    }
+    touchScroll();
+    remember();
+    ImGui::End();
+}
+
+void Shell::topologyPanel(ShellContext& c) {
+    SculptView& v = c.view;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImGui::SetNextWindowPos(ImVec2(topologyButtonX_, vp->WorkPos.y + kBarH + 4.0f));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, vp->WorkSize.y - kBarH - kBrushH - 5.0f * kGap));
+    ImGui::Begin("##topologypanel", nullptr, kPanelFlags);
+    const float w = 340.0f, spacing = ImGui::GetStyle().ItemSpacing.x, half = (w - spacing) * 0.5f, h = 44.0f, labelW = 96.0f;
+    const auto dimText = [&](const char* text) {
+        ImGui::PushFont(small_);
+        ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + w);
+        ImGui::TextColored(ImColor(kDim), "%s", text);
+        ImGui::PopTextWrapPos();
+        ImGui::PopFont();
+    };
+    const auto run = [&](const char* command, const sf::Args& args = {}) {
+        std::string message;
+        if (!v.runCommand(command, args, &message)) c.notify(T("That didn't work on this Part."));
+    };
+
+    // Subdivision levels (ZBrush's SDiv): sculpt big forms low, details high; each level has 4x the triangles.
+    ImGui::TextColored(ImColor(kDim), "%s", T("Subdivision levels"));
+    const int levels = v.subdivLevels(), level = v.subdivLevel();
+    if (levels > 0)
+        ImGui::TextUnformatted(i18n::format(T("Level %d of %d (%s triangles)"), level + 1, levels,
+                                            grouped((long long)v.subdivLevelTriangles(level)).c_str()).c_str());
+    else
+        dimText(T("No levels yet: Divide adds one (4x the triangles) and keeps this one to come back to."));
+    if (wideButton("divide", ICON_LC_GRID_2X2_PLUS, T("Divide"), w, h)) run("subdiv_divide");
+    if (wideButton("lower", ICON_LC_CHEVRON_DOWN, T("Lower level"), half, h, false, levels > 0 && level > 0)) run("subdiv_lower");
+    ImGui::SameLine();
+    if (wideButton("higher", ICON_LC_CHEVRON_UP, T("Higher level"), half, h, false, levels > 0 && level < levels - 1)) run("subdiv_higher");
+    if (wideButton("dellower", ICON_LC_CHEVRONS_DOWN, T("Delete lower"), half, h, false, levels > 0 && level > 0)) run("subdiv_delete_lower");
+    ImGui::SameLine();
+    if (wideButton("delhigher", ICON_LC_CHEVRONS_UP, T("Delete higher"), half, h, false, levels > 0 && level < levels - 1))
+        run("subdiv_delete_higher");
+
+    // Dynamic topology (Sculptris Pro): the brush adds and removes triangles as it goes.
+    ImGui::Separator();
+    sf::DyntopoSettings& d = v.dyntopo();
+    ImGui::Checkbox(T("Dynamic topology"), &d.enabled);
+    const std::string blocker = v.dyntopoBlocker();
+    if (!blocker.empty())
+        dimText(levels > 0 ? T("Not on a model with subdivision levels: delete them first (Delete lower / higher).")
+                           : T("This model can't be remeshed by the brush."));
+    else
+        dimText(T("Each dab remeshes the surface under the brush: pull out horns and fingers without stretching."));
+    if (d.enabled) {
+        float detail = d.detail * 100.0f;
+        ImGui::AlignTextToFramePadding();
+        ImGui::TextUnformatted(T("Detail"));
+        ImGui::SameLine(labelW);
+        ImGui::SetNextItemWidth(w - labelW);
+        if (ImGui::SliderFloat("##detail", &detail, 0.0f, 100.0f, "%.0f")) d.detail = std::clamp(detail / 100.0f, 0.0f, 1.0f);
+        ImGui::Checkbox(T("Same detail everywhere"), &d.constantDetail);
+        dimText(d.constantDetail ? T("The triangles have one size for the whole model.")
+                                 : T("The triangles follow the brush size: zoom in or shrink the brush for finer ones."));
+    }
+
+    // Voxel Remesh: an even, closed surface again (merges overlapping pieces).
+    ImGui::Separator();
+    ImGui::TextColored(ImColor(kDim), "%s", T("Voxel Remesh"));
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextUnformatted(T("Resolution"));
+    ImGui::SameLine(labelW);
+    ImGui::SetNextItemWidth(w - labelW);
+    ImGui::SliderInt("##remesh", &remeshResolution_, 32, 512);
+    if (wideButton("remesh", ICON_LC_REFRESH_CW, T("Remesh"), w, h)) run("remesh", {{"resolution", double(remeshResolution_)}});
+    dimText(T("Rebuilds the whole Part as even triangles, joining pieces that overlap. Layers are baked in."));
+
+    // Decimate: fewer triangles, the same shape.
+    ImGui::Separator();
+    ImGui::TextColored(ImColor(kDim), "%s", T("Decimate"));
+    float keep = decimateKeep_ * 100.0f;
+    ImGui::AlignTextToFramePadding();
+    ImGui::TextUnformatted(T("Keep"));
+    ImGui::SameLine(labelW);
+    ImGui::SetNextItemWidth(w - labelW);
+    if (ImGui::SliderFloat("##decimate", &keep, 5.0f, 95.0f, "%.0f%%")) decimateKeep_ = keep / 100.0f;
+    const std::string after = i18n::format(T("Decimate to about %s triangles"),
+                                           grouped((long long)(double(v.triangleCount()) * decimateKeep_)).c_str());
+    if (wideButton("decimate", ICON_LC_TRIANGLE, after.c_str(), w, h)) run("decimate", {{"ratio", double(decimateKeep_)}});
+    touchScroll();
+    remember();
+    ImGui::End();
+}
+
+void Shell::gizmoDraw(ShellContext& c) {
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    SculptView::GizmoView g;
+    if (!c.view.gizmo(vp->WorkSize.x, vp->WorkSize.y + vp->WorkPos.y, g)) return;
+    ImDrawList* dl = ImGui::GetBackgroundDrawList();
+    const ImU32 colors[3] = {IM_COL32(235, 80, 80, 255), IM_COL32(110, 205, 90, 255), IM_COL32(80, 140, 245, 255)};
+    const ImU32 hot = IM_COL32(255, 220, 90, 255);
+    const auto at = [](glm::vec2 p) { return ImVec2(p.x, p.y); };
+    const ImVec2 mid = at(g.center);
+    switch (c.view.gizmoMode) {
+    case SculptView::GizmoMode::Move:
+    case SculptView::GizmoMode::Scale: {
+        const bool move = c.view.gizmoMode == SculptView::GizmoMode::Move;
+        for (int k = 0; k < 3; ++k) {
+            const ImU32 col = g.hot == k ? hot : colors[k];
+            dl->AddLine(mid, at(g.tip[k]), col, 3.0f);
+            if (move) dl->AddCircleFilled(at(g.tip[k]), 9.0f, col);
+            else dl->AddRectFilled(ImVec2(g.tip[k].x - 8.0f, g.tip[k].y - 8.0f), ImVec2(g.tip[k].x + 8.0f, g.tip[k].y + 8.0f), col, 2.0f);
+        }
+        const ImU32 centre = g.hot == 3 ? hot : IM_COL32(255, 255, 255, 230);
+        if (move) dl->AddCircle(mid, 12.0f, centre, 32, 3.0f);
+        else dl->AddRect(ImVec2(mid.x - 10.0f, mid.y - 10.0f), ImVec2(mid.x + 10.0f, mid.y + 10.0f), centre, 2.0f, 0, 3.0f);
+        break;
+    }
+    case SculptView::GizmoMode::Rotate:
+        for (int k = 0; k < 3; ++k) {
+            std::vector<ImVec2> pts;
+            for (const glm::vec2& p : g.ring[k]) pts.push_back(at(p));
+            dl->AddPolyline(pts.data(), int(pts.size()), g.hot == k ? hot : colors[k], ImDrawFlags_Closed, 3.0f);
+        }
+        dl->AddCircle(mid, g.viewRingPx, g.hot == 3 ? hot : IM_COL32(255, 255, 255, 200), 64, 2.5f);
+        dl->AddCircleFilled(mid, 4.0f, IM_COL32(255, 255, 255, 200));
+        break;
+    }
+}
+
+void Shell::gizmoBar(ShellContext& c) {
+    // Move / Rotate / Scale under the gizmo (kept on screen), hidden while a handle is dragged or a panel is open.
+    SculptView& v = c.view;
+    if (v.toolDef().drive != Drive::Gizmo || v.stroking() || panel_ != Panel::None) return;
+    const ImGuiViewport* vp = ImGui::GetMainViewport();
+    SculptView::GizmoView g;
+    if (!v.gizmo(vp->WorkSize.x, vp->WorkSize.y + vp->WorkPos.y, g)) return;
+    const float bw = 76.0f, bh = 44.0f, spacing = 4.0f, width = 3.0f * bw + 2.0f * spacing + 16.0f;
+    const float x = std::clamp(g.center.x - width * 0.5f, vp->WorkPos.x + kStripW + kGap, vp->WorkPos.x + vp->WorkSize.x - kStripW - kGap - width);
+    const float y = std::clamp(g.center.y + 128.0f, vp->WorkPos.y + kBarH + kGap, vp->WorkPos.y + vp->WorkSize.y - kBrushH - 3.0f * kGap - bh - 16.0f);
+    ImGui::SetNextWindowPos(ImVec2(x, y));
+    ImGui::Begin("##gizmobar", nullptr, kBarFlags | ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
+    struct Mode {
+        SculptView::GizmoMode mode;
+        const char* icon;
+        const char* label;
+    };
+    static const Mode modes[] = {{SculptView::GizmoMode::Move, ICON_LC_MOVE, "Move"},
+                                 {SculptView::GizmoMode::Rotate, ICON_LC_ROTATE_CW, "Rotate"},
+                                 {SculptView::GizmoMode::Scale, ICON_LC_SCALE_3D, "Scale"}};
+    for (int i = 0; i < 3; ++i) {
+        if (i) ImGui::SameLine();
+        if (wideButton(modes[i].label, modes[i].icon, T(modes[i].label), bw, bh, v.gizmoMode == modes[i].mode)) v.gizmoMode = modes[i].mode;
+    }
+    ImGui::PopStyleVar();
+    remember();
+    ImGui::End();
 }
 
 void Shell::maskPanel(ShellContext& c) {

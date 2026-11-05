@@ -116,6 +116,25 @@ void toggleFullscreen(const char* message, const char* okLabel, const char* canc
     js_fullscreen_toggle(message, okLabel, cancelLabel);
 }
 
+EM_JS(void, js_ask_text, (const char* title, const char* current, const char* ok, const char* cancel), {
+    SculptureFiles.askText(UTF8ToString(title), UTF8ToString(current), UTF8ToString(ok), UTF8ToString(cancel));
+});
+EM_JS(char*, js_take_answer, (), {
+    const a = SculptureFiles.takeAnswer();
+    return a === null ? 0 : stringToNewUTF8(a);
+});
+bool askText(const char* title, const std::string& current, const char* okLabel, const char* cancelLabel) {
+    js_ask_text(title, current.c_str(), okLabel, cancelLabel);
+    return true;
+}
+bool takeText(std::string& text, bool& ok) {
+    const std::string a = takeString(js_take_answer());
+    if (a.size() < 2) return false;
+    ok = a[0] == '1';
+    text = a.substr(2);
+    return true;
+}
+
 // Settings live in the site's localStorage (small, synchronous; it may be unavailable: then nothing is kept).
 EM_JS(char*, js_setting_load, (const char* name), {
     try {
@@ -253,6 +272,9 @@ bool isFullscreen() { return gWindow && (SDL_GetWindowFlags(gWindow) & SDL_WINDO
 void toggleFullscreen(const char*, const char*, const char*) {
     if (gWindow) SDL_SetWindowFullscreen(gWindow, !isFullscreen());
 }
+
+bool askText(const char*, const std::string&, const char*, const char*) { return false; }
+bool takeText(std::string&, bool&) { return false; }
 
 std::string loadSetting(const std::string& name) {
     std::string out;

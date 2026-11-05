@@ -29,6 +29,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
 EM_JS_DEPS(sculpture_main, "$stringToNewUTF8,$UTF8ToString");
 EM_JS(char*, sculpture_browser_info, (), {
     const n = navigator;
@@ -189,6 +190,12 @@ bool createContext(AppState& app, std::string& error) {
         error = std::string("SDL_CreateWindow: ") + SDL_GetError();
         return false;
     }
+#ifdef __EMSCRIPTEN__
+    // The page goes full screen itself (Settings > Full screen, files.js): to SDL that is only a window resize. Left
+    // to its own fullscreenchange handler, SDL marks the window full screen and from then on ignores the canvas's
+    // size, so the picture kept its old size, cut off at the top (iPad).
+    emscripten_set_fullscreenchange_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, 0, nullptr);
+#endif
     app.gl = SDL_GL_CreateContext(app.window);
 #ifndef __EMSCRIPTEN__
     if (!app.gl) {

@@ -124,6 +124,7 @@ add_executable(SculptureABC WIN32
   src/PointerInput.cpp
   src/Brushes.cpp
   src/SculptView.cpp
+  src/render/GroupOverlay.cpp
   src/Shell.cpp
   src/ViewportInput.cpp
   src/FileStore.cpp

@@ -7,7 +7,7 @@ A digital sculpting web app for tablets (iPad / Android) with a Traditional Chin
 WebAssembly with Emscripten, drawn with WebGL2. The same code also builds for Windows.
 
 <p align="center">
-  <img src="preview.webp" alt="SculptureABC 預覽 / Preview" width="720">
+  <img src="mobile/preview.webp" alt="SculptureABC 預覽 / Preview" width="720">
 </p>
 
 ## 來源與授權 · Credits and license

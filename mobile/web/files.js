@@ -19,6 +19,7 @@ var SculptureFiles = (() => {
   let commits = 0;     // autosaves handed over so far
   let worker = null;
   let leaving = false; // the page is going to the background or away: write the quickest way
+  let answer = null;   // askText's answer, waiting for the program
 
   const opfs = () => window.isSecureContext && !!(navigator.storage && navigator.storage.getDirectory);
   const touch = () => (navigator.maxTouchPoints || 0) > 0;
@@ -187,6 +188,7 @@ var SculptureFiles = (() => {
     // Once, when the program starts: drag and drop, saving when the page goes to the background, and (unless the
     // start options say otherwise) reading back the last autosave.
     init(restore) {
+      this.watchFullscreen();
       if (!opfs()) state = 'off';
       else {
         if (navigator.storage.persist) navigator.storage.persist().catch(() => {}); // (asks the browser to keep it)
@@ -301,6 +303,13 @@ var SculptureFiles = (() => {
       return !this.runningAsApp() && !!(d.requestFullscreen || d.webkitRequestFullscreen);
     },
     isFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement); },
+    // After entering or leaving full screen the page's size settles over a moment (iPad): tell the program a few
+    // times that the window changed, so the canvas follows (main.cpp leaves full screen changes to resizes).
+    watchFullscreen() {
+      const nudge = () => [50, 300, 800].forEach((ms) => setTimeout(() => window.dispatchEvent(new Event('resize')), ms));
+      document.addEventListener('fullscreenchange', nudge);
+      document.addEventListener('webkitfullscreenchange', nudge);
+    },
     toggleFullscreen(message, okLabel, cancelLabel) {
       if (this.isFullscreen()) {
         const exit = document.exitFullscreen || document.webkitExitFullscreen;
@@ -318,6 +327,66 @@ var SculptureFiles = (() => {
       };
       if (touch() || needsTap()) overlay(message, okLabel, cancelLabel, go);
       else go();
+    },
+    // A name for a layer or a Part: a box with a text field (tapping it brings up the tablet's keyboard). The
+    // answer waits in `answer` until the program takes it: "1\n" + the text, or "0\n" when cancelled.
+    askText(title, current, okLabel, cancelLabel) {
+      const old = document.getElementById('files-overlay');
+      if (old) old.remove();
+      answer = null;
+      const box = document.createElement('div');
+      box.id = 'files-overlay';
+      box.style.cssText = 'position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;' +
+        'padding-top:12vh;background:rgba(0,0,0,0.45);z-index:10;touch-action:manipulation;';
+      const card = document.createElement('div');
+      card.style.cssText = 'background:#33363c;color:#e6e8ec;border-radius:14px;padding:20px 22px;min-width:300px;' +
+        'max-width:80vw;font:17px system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,0.5);text-align:center;';
+      const text = document.createElement('div');
+      text.textContent = title;
+      text.style.cssText = 'margin-bottom:12px;';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = current;
+      input.maxLength = 60;
+      input.style.cssText = 'font:inherit;width:100%;box-sizing:border-box;padding:10px 12px;margin-bottom:16px;' +
+        'border:1px solid #5a5e66;border-radius:8px;background:#24262a;color:#fff;';
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:12px;justify-content:center;';
+      const finish = (ok) => {
+        box.remove();
+        answer = ok ? '1\n' + input.value.trim() : '0\n';
+      };
+      const button = (label, primary, ok) => {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.style.cssText = 'font:inherit;padding:10px 22px;border:0;border-radius:10px;color:#fff;' +
+          (primary ? 'background:#408ce6;' : 'background:#4a4e56;');
+        b.addEventListener('click', (e) => { e.stopPropagation(); finish(ok); });
+        row.appendChild(b);
+      };
+      button(cancelLabel, false, false);
+      button(okLabel, true, true);
+      input.addEventListener('keydown', (e) => {
+        e.stopPropagation(); // (the program's keyboard shortcuts stay out of the field)
+        if (e.key === 'Enter') finish(true);
+        if (e.key === 'Escape') finish(false);
+      });
+      input.addEventListener('keyup', (e) => e.stopPropagation());
+      card.appendChild(text);
+      card.appendChild(input);
+      card.appendChild(row);
+      box.appendChild(card);
+      box.addEventListener('pointerdown', (e) => e.stopPropagation());
+      document.body.appendChild(box);
+      if (!touch()) { // (on a tablet the keyboard only comes up for a tap on the field itself)
+        input.focus();
+        input.select();
+      }
+    },
+    takeAnswer() {
+      const a = answer;
+      answer = null;
+      return a;
     },
     remove(path) {
       try { FS.unlink(path); } catch (e) { /* gone */ }
